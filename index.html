@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenomX Visualizer - Bioinformática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        /* === TEMA CIENTÍFICO PROFESIONAL / SAAS === */
+        :root {
+            --bg: #e2e8f0;
+            --bg-alt: #ffffff;
+            --fg: #0f172a;
+            --fg-label: #475569;
+            --border: #94a3b8;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --highlight: #2563eb;
+            --info: #0891b2;
+            --inactive: #64748b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background-color: var(--bg-alt);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+
+        .navbar-brand {
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-right: 1px solid var(--border);
+            letter-spacing: -0.5px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--inactive);
+            padding: 16px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { 
+            color: var(--primary); 
+            border-bottom-color: var(--primary); 
+        }
+        
+        .tab-btn[data-tab="sw"].active  { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn[data-tab="nw"].active  { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* ===== CONTENEDORES ===== */
+        .tab-panel { display: none; padding: 30px 20px; animation: fadeIn 0.3s ease; }
+        .tab-panel.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { 
+            color: var(--primary); 
+            font-weight: 700;
+            margin-top: 0; 
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+        h3 { color: var(--fg); font-weight: 600; font-size: 18px; }
+
+        .controls {
+            background-color: var(--bg-alt);
+            padding: 24px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .controls label {
+            color: var(--fg-label);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .controls input {
+            background-color: #f8fafc;
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin: 0 10px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
+        }
+        
+        .controls input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .ctrl-btn {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .ctrl-btn:hover { 
+            background-color: var(--primary-hover); 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+
+        .explanation-box {
+            background-color: #f8fafc;
+            padding: 20px;
+            margin: 10px auto 24px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            text-align: left;
+            min-height: 80px;
+            line-height: 1.6;
+            color: var(--fg-label);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+        }
+
+        /* ===== TABLAS GENERALES ===== */
+        .matrix-wrapper {
+            overflow-x: auto;
+            margin: 20px auto;
+            max-width: 95%;
+            padding-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background-color: var(--bg-alt);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 2px solid #cbd5e1;
+        }
+
+        td, th {
+            border: 1.5px solid #cbd5e1;
+            position: relative;
+            text-align: center;
+        }
+
+        th { 
+            background-color: #f1f5f9; 
+            color: var(--fg); 
+            font-size: 13px; 
+            padding: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        /* ALINEAMIENTOS (SW / NW) */
+        .aln-cell { 
+            width: 140px; 
+            height: 110px; 
+            background-color: #ffffff;
+            transition: all 0.2s;
+            padding: 0;
+            overflow: hidden;
+        }
+        .aln-cell:hover { background-color: #f8fafc; }
+        
+        .v-max { 
+            font-size: 18px; 
+            font-weight: 800; 
+            position: absolute; 
+            bottom: 10px; 
+            right: 12px; 
+            z-index: 3; 
+            color: var(--primary); 
+            background: #ffffff;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .mini-val { 
+            position: absolute; 
+            font-size: 9px; 
+            color: #64748b; 
+            font-weight: 600; 
+            white-space: nowrap; 
+            line-height: 1.2;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .mini-val.chosen { 
+            color: #ffffff; 
+            background: var(--primary);
+            font-weight: 700; 
+            z-index: 2; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .v-diag { top: 8px; left: 8px; border-left: 2px solid #e2e8f0; } 
+        .v-up { top: 8px; right: 8px; border-right: 2px solid #e2e8f0; } 
+        .v-left { bottom: 10px; left: 8px; border-left: 2px solid #e2e8f0; } 
+        
+        .v-edge { 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 85%; 
+            font-size: 11px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 4px;
+            color: var(--fg);
+        }
+
+        .highlight { 
+            background-color: #e0f2fe !important;
+            box-shadow: inset 0 0 0 3px var(--primary) !important;
+            z-index: 10; 
+        }
+        .path-cell { 
+            background-color: #dcfce7 !important;
+            box-shadow: inset 0 0 0 3px var(--success) !important;
+            z-index: 5; 
+        }
+
+        /* DISEÑO LATERAL */
+        .final-results-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 24px;
+            margin: 32px auto;
+            width: 98%;
+        }
+
+        .result-box { 
+            display: none; 
+            margin: 0; 
+            background-color: var(--bg-alt); 
+            padding: 24px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            width: fit-content; 
+            min-width: 450px; 
+            box-shadow: var(--shadow); 
+        }
+        .solution-item { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .solution-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .solution-title { 
+            font-size: 16px; 
+            font-weight: 700; 
+            margin-bottom: 20px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            color: var(--primary);
+        }
+        
+        .alignment-container { font-family: 'JetBrains Mono', monospace; font-size: 20px; display: flex; flex-direction: column; align-items: center; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .seq-row, .pipe-row { display: flex; justify-content: center; }
+        .seq-row span, .pipe-row span { width: 24px; text-align: center; }
+        .pipe-row span { color: var(--success); font-weight: 700; }
+
+        /* NUEVOS ESTILOS DE RESULTADOS */
+        .stats-bar { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-card { 
+            background: #f8fafc; 
+            border: 1px solid var(--border); 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .stat-card.score { color: var(--primary); background: rgba(79, 70, 229, 0.05); border-color: rgba(79, 70, 229, 0.1); }
+        .stat-card.identity { color: var(--highlight); background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.1); }
+        .stat-card.gaps { color: var(--warning); background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.1); }
+        .stat-card.mismatch { color: var(--danger); background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.1); }
+
+        .bio-interpretation { 
+            background: #ffffff; 
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--danger); 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 24px; 
+            text-align: left; 
+            max-width: 800px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .bio-interpretation h4 { 
+            margin: 0 0 12px 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            color: var(--fg); 
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .bio-interpretation p { margin: 0; font-size: 14px; color: var(--fg-label); }
+        .bio-interpretation b { color: var(--fg); font-weight: 600; }
+
+        /* MATRICES COMPACTAS */
+        .compact-container { display: flex; gap: 24px; justify-content: center; margin-top: 0; flex-wrap: wrap; }
+        .compact-box { 
+            background: var(--bg-alt); 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            box-shadow: var(--shadow); 
+            min-width: 300px; 
+        }
+        .compact-box h4 { 
+            color: var(--fg-label); 
+            font-size: 12px; 
+            font-weight: 700;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            justify-content: center; 
+        }
+        
+        .compact-table { border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 0 auto; border: 2px solid #cbd5e1; }
+        .compact-table th, .compact-table td { border: 1.5px solid #cbd5e1; width: 34px; height: 34px; text-align: center; }
+        .compact-table th { background: #f1f5f9; color: var(--fg); font-weight: 700; }
+        .compact-table td { color: var(--fg); background: #ffffff; font-weight: 500; }
+        .compact-table td.score-val { color: var(--primary); font-weight: 700; background: #f8fafc; }
+        .compact-table td.arrow-val { color: var(--highlight); font-size: 16px; font-weight: 700; }
+        .compact-table td.bg-init { background: #f8fafc; color: var(--fg-label); }
+
+        .match-text { color: var(--success); font-weight: 600; }
+        .mismatch-text { color: var(--danger); font-weight: 600; }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .main-header { padding: 30px 10px; }
+            .main-title { font-size: 2.2rem; gap: 10px; flex-direction: column; }
+            .dna-icon { font-size: 3.5rem; }
+            .main-subtitle { font-size: 1.1rem; gap: 10px; flex-wrap: wrap; }
+            .header-divider { display: none; }
+            
+            .controls { padding: 15px; width: 95%; display: flex; flex-direction: column; align-items: center; }
+            .controls label { display: block; margin-bottom: 10px; width: 100%; }
+            .controls input { margin: 5px 0; width: 100% !important; }
+            
+            .result-box { min-width: 0; width: 100%; padding: 15px; }
+            .alignment-container { font-size: 16px; overflow-x: auto; width: 100%; align-items: flex-start; }
+            
+            .compact-box { min-width: 0; width: 100%; overflow-x: auto; }
+            
+            h2 { font-size: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-title { font-size: 1.8rem; }
+            .dna-icon { font-size: 2.8rem; }
+            .tab-btn { padding: 12px 10px; font-size: 12px; }
+            .ctrl-btn { width: 100%; margin: 5px 0; }
+        }
+
+        /* === ESTILOS DEL ENCABEZADO PRINCIPAL === */
+        .main-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            padding: 50px 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .main-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: -1.5px;
+        }
+
+        .dna-icon {
+            font-size: 4.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            animation: dna-bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes dna-bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(10deg); }
+        }
+
+        .main-subtitle {
+            margin-top: 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .sw-label-text { color: var(--primary); }
+        .nw-label-text { color: var(--success); }
+        .header-divider { color: var(--border); font-weight: 300; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--inactive); border-radius: 10px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--fg-label); }
+    </style>
+</head>
+<body>
+
+<!-- ENCABEZADO PRINCIPAL -->
+<header class="main-header">
+    <h1 class="main-title"><span class="dna-icon">🧬</span> GenomX Visualizer</h1>
+    <div class="main-subtitle">
+        <span class="sw-label-text">Smith-Waterman</span>
+        <span class="header-divider">|</span>
+        <span class="nw-label-text">Needleman-Wunsch</span>
+    </div>
+</header>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <button class="tab-btn active" data-tab="sw" onclick="showTab('sw')">Smith-Waterman</button>
+    <button class="tab-btn" data-tab="nw" onclick="showTab('nw')">Needleman-Wunsch</button>
+</nav>
+
+<!-- ==================== SMITH-WATERMAN ==================== -->
+<div id="panel-sw" class="tab-panel active">
+    <h2>Smith-Waterman (Alineamiento Local Multi-Solución)</h2>
+    <div class="controls">
+        <label>Seq 1: <input type="text" id="sw-seq1" value="ATAT" style="width:100px;"></label>
+        <label>Seq 2: <input type="text" id="sw-seq2" value="TATA" style="width:100px;"></label>
+        <div style="margin-top:10px;">
+            <label>Match: <input type="number" id="sw-match" value="1" style="width:80px;"></label>
+            <label>Mismatch: <input type="number" id="sw-mismatch" value="-1" style="width:80px;"></label>
+            <label>Gap: <input type="number" id="sw-gap" value="-1" style="width:80px;"></label>
+        </div>
+    </div><br>
+    <button class="ctrl-btn" onclick="SW.fastForward()">Calcular</button>
+    <button class="ctrl-btn" onclick="SW.nextStep()">Paso a Paso</button>
+    <button class="ctrl-btn" onclick="SW.reset()">Reiniciar</button>
+
+    <div id="sw-explanation" class="explanation-box">Haz clic en "Siguiente Paso" para comenzar el cálculo.</div>
+    <div class="matrix-wrapper"><div id="sw-matrix"></div></div>
+    
+    <div class="final-results-layout">
+        <!-- NUEVAS MATRICES COMPACTAS SW -->
+        <div id="sw-compact-area" class="compact-container" style="display:none; margin-top:0;">
+            <div class="compact-box">
+                <h4>📊 MATRIZ DE PUNTAJES (COMPACTA)</h4>
+                <div id="sw-compact-scores"></div>
+            </div>
+            <div class="compact-box">
+                <h4>🧭 MATRIZ DE FLECHAS (DIRECCIÓN)</h4>
+                <div id="sw-compact-arrows"></div>
+            </div>
+        </div>
+
+        <div id="sw-alignment-box" class="result-box" style="border: 1px solid var(--border);">
+            <h3>Rutas Locales Óptimas</h3>
+            <div id="sw-alignment-result" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== NEEDLEMAN-WUNSCH ==================== -->
+<div id="panel-nw" class="tab-panel">
+    <h2>Needleman-Wunsch (Alineamiento Global)</h2>
+    <div class="controls">
+        <label>Seq 1: <input type="text" id="nw-seq1" value="ACGTGA" style="width:120px;"></label>
+        <label>Seq 2: <input type="text" id="nw-seq2" value="ACTAGA" style="width:120px;"></label>
+        <div style="margin-top:10px;">
+            <label>Match: <input type="number" id="nw-match" value="1" style="width:80px;"></label>
+            <label>Mismatch: <input type="number" id="nw-mismatch" value="-1" style="width:80px;"></label>
+            <label>Gap: <input type="number" id="nw-gap" value="-1" style="width:80px;"></label>
+        </div>
+    </div><br>
+    <button class="ctrl-btn" onclick="NW.fastForward()">Calcular</button>
+    <button class="ctrl-btn" onclick="NW.nextStep()">Paso a Paso</button>
+    <button class="ctrl-btn" onclick="NW.reset()">Reiniciar</button>
+
+    <div id="nw-explanation" class="explanation-box">Haz clic en "Siguiente Paso" para comenzar el cálculo.</div>
+    <div class="matrix-wrapper"><div id="nw-matrix"></div></div>
+
+    <div class="final-results-layout">
+        <!-- NUEVAS MATRICES COMPACTAS NW -->
+        <div id="nw-compact-area" class="compact-container" style="display:none; margin-top:0;">
+            <div class="compact-box">
+                <h4>📊 MATRIZ DE PUNTAJES (COMPACTA)</h4>
+                <div id="nw-compact-scores"></div>
+            </div>
+            <div class="compact-box">
+                <h4>🧭 MATRIZ DE FLECHAS (DIRECCIÓN)</h4>
+                <div id="nw-compact-arrows"></div>
+            </div>
+        </div>
+
+        <div id="nw-alignment-box" class="result-box" style="border: 1px solid var(--success);">
+            <h3>Alineamiento Global (Traceback)</h3>
+            <div class="alignment-container" id="nw-alignment-result"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   TABS LOGIC
+   ============================================================ */
+function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelector(`.tab-btn[data-tab="${name}"]`).classList.add('active');
+}
+
+/* ============================================================
+   SMITH-WATERMAN 
+   ============================================================ */
+const SW = (() => {
+    let MATCH = 1, MISMATCH = -1, GAP = -1;
+    const palette =['#f7768e','#9ece6a','#7aa2f7','#e0af68','#bb9af7','#7dcfff'];
+    let seq1, seq2, matrix, details, step, pathMap;
+
+    function init() {
+        seq1 = document.getElementById('sw-seq1').value.toUpperCase().trim() || "ATAT";
+        seq2 = document.getElementById('sw-seq2').value.toUpperCase().trim() || "TATA";
+        MATCH = parseInt(document.getElementById('sw-match').value) || 1;
+        MISMATCH = parseInt(document.getElementById('sw-mismatch').value) || -1;
+        GAP = parseInt(document.getElementById('sw-gap').value) || -1;
+        
+        matrix = Array(seq1.length+1).fill(null).map(() => Array(seq2.length+1).fill(0));
+        details = Array(seq1.length+1).fill(null).map(() => Array(seq2.length+1).fill(null));
+        pathMap = {};
+        for(let i=0;i<=seq1.length;i++) matrix[i][0]=0;
+        for(let j=0;j<=seq2.length;j++) matrix[0][j]=0;
+        step = 1;
+        document.getElementById('sw-explanation').innerHTML = "Bordes inicializados en 0.<br>Haz clic en 'Paso a Paso'.";
+        document.getElementById('sw-alignment-box').style.display = 'none';
+        document.getElementById('sw-compact-area').style.display = 'none';
+        drawMatrix();
+    }
+
+    function drawCompactMatrices() {
+        let scoresHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+        let arrowsHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+        for(let j=0;j<seq2.length;j++) {
+            scoresHtml += `<th>${seq2[j]}</th>`;
+            arrowsHtml += `<th>${seq2[j]}</th>`;
+        }
+        scoresHtml += '</tr>';
+        arrowsHtml += '</tr>';
+
+        for(let i=0;i<=seq1.length;i++) {
+            scoresHtml += `<tr><th>${i===0?'-':seq1[i-1]}</th>`;
+            arrowsHtml += `<tr><th>${i===0?'-':seq1[i-1]}</th>`;
+            for(let j=0;j<=seq2.length;j++) {
+                const val = matrix[i][j];
+                const d = details[i][j];
+                let arrows = '';
+                if (d && !d.isEdge) {
+                    if (d.diag === d.max && d.max > 0) arrows += '↖';
+                    if (d.up === d.max && d.max > 0) arrows += '↑';
+                    if (d.left === d.max && d.max > 0) arrows += '←';
+                } else if (i===0 && j===0) {
+                    arrows = '•';
+                }
+
+                scoresHtml += `<td class="${(i===0||j===0)?'bg-init':'score-val'}">${val}</td>`;
+                arrowsHtml += `<td class="arrow-val">${arrows || ''}</td>`;
+            }
+            scoresHtml += '</tr>';
+            arrowsHtml += '</tr>';
+        }
+        scoresHtml += '</table>';
+        arrowsHtml += '</table>';
+        
+        document.getElementById('sw-compact-scores').innerHTML = scoresHtml;
+        document.getElementById('sw-compact-arrows').innerHTML = arrowsHtml;
+        document.getElementById('sw-compact-area').style.display = 'flex';
+    }
+
+    function drawMatrix(hI=-1, hJ=-1) {
+        let html = '<table><tr><th></th><th>-</th>';
+        for(let j=0;j<seq2.length;j++) html += '<th>'+seq2[j]+'</th>';
+        html += '</tr>';
+        for(let i=0;i<=seq1.length;i++) {
+            html += '<tr>';
+            html += i===0 ? '<th>-</th>' : '<th>'+seq1[i-1]+'</th>';
+            for(let j=0;j<=seq2.length;j++) {
+                let hCls = (i===hI && j===hJ) ? 'highlight' : '';
+                let key = i+'-'+j;
+                let cellStyle = '';
+                if(pathMap[key] && pathMap[key].length > 0) {
+                    let sols = pathMap[key];
+                    if(sols.length===1) {
+                        let c = palette[sols[0]%palette.length];
+                        cellStyle = `box-shadow:inset 0 0 0 3px ${c},inset 0 0 15px ${c}40;background-color:${c}33;z-index:5;`;
+                    } else {
+                        let shadows=[], gradStops=[], pct=100/sols.length;
+                        sols.forEach((sIdx,idx) => {
+                            let c=palette[sIdx%palette.length];
+                            shadows.push(`inset 0 0 0 ${(idx+1)*3}px ${c}`);
+                            gradStops.push(`${c}40 ${idx*pct}%`,`${c}40 ${(idx+1)*pct}%`);
+                        });
+                        cellStyle = `box-shadow:${shadows.join(',')};background:linear-gradient(135deg,${gradStops.join(',')});z-index:5;`;
+                    }
+                }
+                html += `<td class='aln-cell ${hCls}' style='${cellStyle}'>`;
+                if(i===0||j===0) {
+                    html += `<div class='v-max'>${matrix[i][j]}</div>`;
+                } else if(details[i][j]) {
+                    let d=details[i][j], zero=(d.max===0);
+                    let diagChosen = !zero && d.diag === d.max;
+                    let upChosen = !zero && d.up === d.max;
+                    let leftChosen = !zero && d.left === d.max;
+                    html += `<div class='mini-val v-diag${diagChosen?" chosen":""}'>↖ ${d.diagStr}=${d.diag}</div>`;
+                    html += `<div class='mini-val v-up${upChosen?" chosen":""}'>↑ ${d.upStr}=${d.up}</div>`;
+                    html += `<div class='mini-val v-left${leftChosen?" chosen":""}'>← ${d.leftStr}=${d.left}</div>`;
+                    html += `<div class='v-max'>${d.max}</div>`;
+                }
+                html += '</td>';
+            }
+            html += '</tr>';
+        }
+        html += '</table>';
+        document.getElementById('sw-matrix').innerHTML = html;
+    }
+
+    function showAlignment() {
+        let maxScore=0; let startCells=[]; let allAlignments=[]; pathMap={};
+        for(let i=0;i<=seq1.length;i++) for(let j=0;j<=seq2.length;j++) if(matrix[i][j]>maxScore) maxScore=matrix[i][j];
+        
+        if(maxScore===0) {
+            document.getElementById('sw-alignment-result').innerHTML = "<div style='padding:20px; color:var(--warning);'>No se encontró un alineamiento local con puntuación mayor a 0. Intenta aumentar el valor de 'Match' o usar secuencias con más similitud.</div>";
+            document.getElementById('sw-alignment-box').style.display = 'block';
+            return;
+        }
+        for(let i=0;i<=seq1.length;i++) for(let j=0;j<=seq2.length;j++) if(matrix[i][j]===maxScore) startCells.push({i,j});
+
+        function explorePath(i,j,a1,p,a2,cells) {
+            if(matrix[i][j]===0) {
+                let sIdx=allAlignments.length, color=palette[sIdx%palette.length];
+                allAlignments.push({a1,p,a2,color});
+                cells.forEach(cell => {
+                    let k=cell.i+'-'+cell.j;
+                    if(!pathMap[k]) pathMap[k]=[];
+                    if(!pathMap[k].includes(sIdx)) pathMap[k].push(sIdx);
+                });
+                return;
+            }
+            let d=details[i][j], c1=seq1[i-1], c2=seq2[j-1], m=c1===c2;
+            if(d.diag===d.max) explorePath(i-1,j-1,[c1,...a1],[m?'|':'&nbsp;',...p],[c2,...a2],[...cells,{i:i-1,j:j-1}]);
+            if(d.up===d.max)   explorePath(i-1,j,[c1,...a1],['&nbsp;',...p],['-',...a2],[...cells,{i:i-1,j:j}]);
+            if(d.left===d.max) explorePath(i,j-1,['-',...a1],['&nbsp;',...p],[c2,...a2],[...cells,{i:i,j:j-1}]);
+        }
+
+        startCells.forEach(s => explorePath(s.i,s.j,[],[],[],[{i:s.i,j:s.j}]));
+
+        let html='';
+        allAlignments.forEach((aln,idx) => {
+            const mCount = aln.p.filter(c => c === '|').length;
+            const gCount = aln.a1.filter(c => c === '-').length + aln.a2.filter(c => c === '-').length;
+            const mmCount = aln.p.length - mCount - gCount;
+            const identity = ((mCount / aln.p.length) * 100).toFixed(0);
+            
+            let bioStatus = identity > 70 ? "Alta similitud" : identity > 30 ? "Similitud moderada" : "Divergencia alta";
+            let bioColor = identity > 70 ? "var(--success)" : identity > 30 ? "var(--warning)" : "var(--danger)";
+
+            html += `<div class="solution-item" style="border-bottom-color:${aln.color}66">`;
+            html += `<div class="solution-title" style="color:${aln.color}">Solución ${idx+1}</div>`;
+            
+            // Stats Bar
+            html += `<div class="stats-bar">
+                <div class="stat-card score">Score: ${maxScore}</div>
+                <div class="stat-card identity">Identidad: ${mCount}/${aln.p.length} (${identity}%)</div>
+                <div class="stat-card gaps">Gaps: ${gCount}</div>
+                <div class="stat-card mismatch">Mismatches: ${mmCount}</div>
+            </div>`;
+
+            html += `<div class='alignment-container'>`;
+            html += `<div class='seq-row'>`+aln.a2.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+            html += `<div class='pipe-row'>`+aln.p.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+            html += `<div class='seq-row'>`+aln.a1.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+            html += `</div>`;
+
+            // Bio Interpretation
+            html += `<div class="bio-interpretation" style="border-left-color: ${bioColor}">
+                <h4>💡 Interpretación Biológica: ${bioStatus}</h4>
+                <p>Las secuencias muestran un <b>${identity}%</b> de identidad. ${identity > 30 ? "Es probable que compartan un ancestro común o una función similar." : "Es poco probable que estén relacionadas evolutivamente."}</p>
+                ${gCount > 0 ? `<p style="margin-top:10px;"><b>Gaps detectados (${gCount}):</b> Indican posibles <b>inserciones</b> o <b>deleciones</b> (indels) en la historia evolutiva.</p>` : ""}
+            </div>`;
+            
+            html += `</div>`;
+        });
+        document.getElementById('sw-alignment-result').innerHTML = html;
+        document.getElementById('sw-alignment-box').style.display = 'block';
+    }
+
+    function nextStep() {
+        // Detectar cambios en los inputs o puntuaciones
+        const currentS1 = document.getElementById('sw-seq1').value.toUpperCase().trim() || "ATAT";
+        const currentS2 = document.getElementById('sw-seq2').value.toUpperCase().trim() || "TATA";
+        const currentM = parseInt(document.getElementById('sw-match').value) || 1;
+        const currentMM = parseInt(document.getElementById('sw-mismatch').value) || -1;
+        const currentG = parseInt(document.getElementById('sw-gap').value) || -1;
+        
+        let total = seq1.length * seq2.length;
+        
+        if (currentS1 !== seq1 || currentS2 !== seq2 || currentM !== MATCH || currentMM !== MISMATCH || currentG !== GAP || step > total + 1) {
+            init();
+            total = seq1.length * seq2.length;
+        }
+
+        if(step > total) {
+            if(step === total+1) {
+                document.getElementById('sw-explanation').innerHTML = "<span class='match-text'>¡Matriz completada!</span> Pintando <b class='mismatch-text'>TODAS</b> las rutas posibles...";
+                showAlignment(); 
+                drawMatrix(); 
+                drawCompactMatrices();
+                step++;
+            }
+            return;
+        }
+        let i=Math.floor((step-1)/seq2.length)+1, j=((step-1)%seq2.length)+1;
+        let c1=seq1[i-1], c2=seq2[j-1], isM=(c1===c2), score=isM?MATCH:MISMATCH;
+        let diag=matrix[i-1][j-1]+score, up=matrix[i-1][j]+GAP, left=matrix[i][j-1]+GAP;
+        let maxVal=Math.max(0,diag,up,left);
+        matrix[i][j]=maxVal;
+        details[i][j]={
+            diag,up,left,max:maxVal,
+            diagStr:`${matrix[i-1][j-1]}${score>=0?'+'+score:score}`,
+            upStr:`${matrix[i-1][j]}${GAP>=0?'+'+GAP:GAP}`,
+            leftStr:`${matrix[i][j-1]}${GAP>=0?'+'+GAP:GAP}`
+        };
+        let sT=isM?`<span class='match-text'>+${MATCH}</span>`:`<span class='mismatch-text'>${MISMATCH}</span>`;
+        document.getElementById('sw-explanation').innerHTML = `
+            Calculando <b>(${i},${j})</b> | <b>${c1}</b> vs <b>${c2}</b><br>
+            ↖ Diagonal: ${matrix[i-1][j-1]} ${sT} = <b>${diag}</b> | ↑ Arriba: <b>${up}</b> | ← Izquierda: <b>${left}</b><br>
+            Max: ${maxVal===0?`<span class='reset-text'>0 (Reinicio)</span>`:`<b class='warning'>${maxVal}</b>`}`;
+        drawMatrix(i,j); step++;
+    }
+
+    function fastForward() { 
+        // Forzamos una comprobación de inicio en la primera llamada
+        nextStep();
+        let t = seq1.length * seq2.length; 
+        while(step <= t + 1) nextStep(); 
+    }
+    return { init, nextStep, fastForward, reset: init };
+})();
+
+/* ============================================================
+   NEEDLEMAN-WUNSCH
+   ============================================================ */
+const NW = (() => {
+    let MATCH=1, MISMATCH=-1, GAP=-1;
+    let seq1, seq2, matrix, details, step, pathCoords;
+
+    function init() {
+        seq1=document.getElementById('nw-seq1').value.toUpperCase().trim() || "ACGTGA";
+        seq2=document.getElementById('nw-seq2').value.toUpperCase().trim() || "ACTAGA";
+        MATCH = parseInt(document.getElementById('nw-match').value) || 1;
+        MISMATCH = parseInt(document.getElementById('nw-mismatch').value) || -1;
+        GAP = parseInt(document.getElementById('nw-gap').value) || -1;
+
+        matrix=Array(seq1.length+1).fill(null).map(()=>Array(seq2.length+1).fill(0));
+        details=Array(seq1.length+1).fill(null).map(()=>Array(seq2.length+1).fill(null));
+        pathCoords=[];
+        for(let i=0;i<=seq1.length;i++) {
+            matrix[i][0]=i*GAP;
+            if(i>0) details[i][0]={isEdge:true,type:'up',str:`${matrix[i-1][0]}${GAP>=0?'+'+GAP:GAP}=${matrix[i][0]}`};
+        }
+        for(let j=0;j<=seq2.length;j++) {
+            matrix[0][j]=j*GAP;
+            if(j>0) details[0][j]={isEdge:true,type:'left',str:`${matrix[0][j-1]}${GAP>=0?'+'+GAP:GAP}=${matrix[0][j]}`};
+        }
+        step=1;
+        document.getElementById('nw-explanation').innerHTML = "Matrices inicializadas.<br>Haz clic en 'Paso a Paso'.";
+        document.getElementById('nw-alignment-box').style.display = 'none';
+        document.getElementById('nw-compact-area').style.display = 'none';
+        drawMatrix();
+    }
+
+    function drawCompactMatrices() {
+        let scoresHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+        let arrowsHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+        for(let j=0;j<seq2.length;j++) {
+            scoresHtml += `<th>${seq2[j]}</th>`;
+            arrowsHtml += `<th>${seq2[j]}</th>`;
+        }
+        scoresHtml += '</tr>';
+        arrowsHtml += '</tr>';
+
+        for(let i=0;i<=seq1.length;i++) {
+            scoresHtml += `<tr><th>${i===0?'-':seq1[i-1]}</th>`;
+            arrowsHtml += `<tr><th>${i===0?'-':seq1[i-1]}</th>`;
+            for(let j=0;j<=seq2.length;j++) {
+                const val = matrix[i][j];
+                const d = details[i][j];
+                let arrows = '';
+                if (d) {
+                    if (d.isEdge) {
+                        arrows = d.type === 'up' ? '↑' : (d.type === 'left' ? '←' : '');
+                    } else {
+                        if (d.diag === d.max) arrows += '↖';
+                        if (d.up === d.max) arrows += '↑';
+                        if (d.left === d.max) arrows += '←';
+                    }
+                } else if (i===0 && j===0) {
+                    arrows = '•';
+                }
+
+                scoresHtml += `<td class="${(i===0||j===0)?'bg-init':'score-val'}">${val}</td>`;
+                arrowsHtml += `<td class="arrow-val">${arrows || ''}</td>`;
+            }
+            scoresHtml += '</tr>';
+            arrowsHtml += '</tr>';
+        }
+        scoresHtml += '</table>';
+        arrowsHtml += '</table>';
+        
+        document.getElementById('nw-compact-scores').innerHTML = scoresHtml;
+        document.getElementById('nw-compact-arrows').innerHTML = arrowsHtml;
+        document.getElementById('nw-compact-area').style.display = 'flex';
+    }
+
+    function drawMatrix(hI=-1, hJ=-1) {
+        let html='<table><tr><th></th><th>-</th>';
+        for(let j=0;j<seq2.length;j++) html+='<th>'+seq2[j]+'</th>';
+        html+='</tr>';
+        for(let i=0;i<=seq1.length;i++) {
+            html+='<tr>';
+            html+=i===0?'<th>-</th>':'<th>'+seq1[i-1]+'</th>';
+            for(let j=0;j<=seq2.length;j++) {
+                let pCls=pathCoords.some(c=>c.i===i&&c.j===j)?'path-cell':'';
+                let hCls=(i===hI&&j===hJ)?'highlight':'';
+                html+=`<td class='aln-cell ${hCls} ${pCls}'>`;
+                if(i===0&&j===0) html+=`<div class='v-max'>${matrix[i][j]}</div>`;
+                else if(details[i][j]&&details[i][j].isEdge) {
+                    let d=details[i][j]; html+=`<div class='mini-val v-edge chosen'>${d.type==='up'?'↑':'←'} ${d.str}</div><div class='v-max'>${matrix[i][j]}</div>`;
+                } else if(details[i][j]) {
+                    let d=details[i][j];
+                    let diagChosen = d.diag === d.max;
+                    let upChosen = d.up === d.max;
+                    let leftChosen = d.left === d.max;
+                    html += `<div class='mini-val v-diag${diagChosen?" chosen":""}'>↖ ${d.diagStr}=${d.diag}</div>`;
+                    html += `<div class='mini-val v-up${upChosen?" chosen":""}'>↑ ${d.upStr}=${d.up}</div>`;
+                    html += `<div class='mini-val v-left${leftChosen?" chosen":""}'>← ${d.leftStr}=${d.left}</div>`;
+                    html += `<div class='v-max'>${d.max}</div>`;
+                }
+                html+='</td>';
+            }
+            html+='</tr>';
+        }
+        html+='</table>';
+        document.getElementById('nw-matrix').innerHTML=html;
+    }
+
+    function showAlignment() {
+        let i=seq1.length, j=seq2.length;
+        let a1=[],p=[],a2=[];
+        pathCoords.push({i,j});
+        while(i>0||j>0) {
+            let cur=matrix[i][j], c1=i>0?seq1[i-1]:'-', c2=j>0?seq2[j-1]:'-';
+            let isM=c1===c2, score=isM?MATCH:MISMATCH;
+            if(i>0&&j>0&&cur===matrix[i-1][j-1]+score) { a1.unshift(c1); a2.unshift(c2); p.unshift(isM?'|':'&nbsp;'); i--; j--; }
+            else if(i>0&&cur===matrix[i-1][j]+GAP) { a1.unshift(c1); a2.unshift('-'); p.unshift('&nbsp;'); i--; }
+            else { a1.unshift('-'); a2.unshift(c2); p.unshift('&nbsp;'); j--; }
+            pathCoords.push({i,j});
+        }
+
+        const mCount = p.filter(c => c === '|').length;
+        const gCount = a1.filter(c => c === '-').length + a2.filter(c => c === '-').length;
+        const mmCount = p.length - mCount - gCount;
+        const identity = ((mCount / p.length) * 100).toFixed(0);
+        const finalScore = matrix[seq1.length][seq2.length];
+        
+        let bioStatus = identity > 70 ? "Alta similitud" : identity > 30 ? "Similitud moderada" : "Divergencia alta";
+        let bioColor = identity > 70 ? "var(--success)" : identity > 30 ? "var(--warning)" : "var(--danger)";
+
+        let html = `<div class="stats-bar">
+            <div class="stat-card score">Score: ${finalScore}</div>
+            <div class="stat-card identity">Identidad: ${mCount}/${p.length} (${identity}%)</div>
+            <div class="stat-card gaps">Gaps: ${gCount}</div>
+            <div class="stat-card mismatch">Mismatches: ${mmCount}</div>
+        </div>`;
+
+        html += `<div class='alignment-container'>`;
+        html += `<div class='seq-row'>`+a2.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+        html += `<div class='pipe-row'>`+p.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+        html += `<div class='seq-row'>`+a1.map(c=>`<span>${c}</span>`).join('')+`</div>`;
+        html += `</div>`;
+
+        html += `<div class="bio-interpretation" style="border-left-color: ${bioColor}">
+            <h4>💡 Interpretación Biológica: ${bioStatus}</h4>
+            <p>Las secuencias muestran un <b>${identity}%</b> de identidad global. ${identity > 30 ? "Existe una relación evolutiva clara entre ambas." : "La divergencia es significativa, sugiriendo una relación lejana o inexistente."}</p>
+            ${gCount > 0 ? `<p style="margin-top:10px;"><b>Gaps detectados (${gCount}):</b> Representan eventos de <b>inserción/deleción</b> necesarios para alinear las secuencias globalmente.</p>` : ""}
+        </div>`;
+
+        document.getElementById('nw-alignment-result').innerHTML=html;
+        document.getElementById('nw-alignment-box').style.display='block';
+    }
+
+    function nextStep() {
+        // Detectar cambios en los inputs o puntuaciones
+        const currentS1 = document.getElementById('nw-seq1').value.toUpperCase().trim() || "ACGTGA";
+        const currentS2 = document.getElementById('nw-seq2').value.toUpperCase().trim() || "ACTAGA";
+        const currentM = parseInt(document.getElementById('nw-match').value) || 1;
+        const currentMM = parseInt(document.getElementById('nw-mismatch').value) || -1;
+        const currentG = parseInt(document.getElementById('nw-gap').value) || -1;
+
+        let total = seq1.length * seq2.length;
+        
+        if (currentS1 !== seq1 || currentS2 !== seq2 || currentM !== MATCH || currentMM !== MISMATCH || currentG !== GAP || step > total + 1) {
+            init();
+            total = seq1.length * seq2.length;
+        }
+
+        if(step > total) {
+            if(step===total+1) {
+                document.getElementById('nw-explanation').innerHTML = "<span class='match-text'>¡Matriz completada!</span> Trazando camino...";
+                showAlignment(); 
+                drawMatrix(); 
+                drawCompactMatrices();
+                step++;
+            }
+            return;
+        }
+        let i=Math.floor((step-1)/seq2.length)+1, j=((step-1)%seq2.length)+1;
+        let c1=seq1[i-1], c2=seq2[j-1], isM=(c1===c2), score=isM?MATCH:MISMATCH;
+        let diag=matrix[i-1][j-1]+score, up=matrix[i-1][j]+GAP, left=matrix[i][j-1]+GAP;
+        let maxVal=Math.max(diag,up,left);
+        matrix[i][j]=maxVal;
+        details[i][j]={
+            diag,up,left,max:maxVal,
+            diagStr:`${matrix[i-1][j-1]}${score>=0?'+'+score:score}`,
+            upStr:`${matrix[i-1][j]}${GAP>=0?'+'+GAP:GAP}`,
+            leftStr:`${matrix[i][j-1]}${GAP>=0?'+'+GAP:GAP}`
+        };
+        let sT=isM?`<span class='match-text'>+${MATCH}</span>`:`<span class='mismatch-text'>${MISMATCH}</span>`;
+        document.getElementById('nw-explanation').innerHTML=`Calculando <b>(${i},${j})</b> | <b>${c1}</b> vs <b>${c2}</b><br>↖: ${matrix[i-1][j-1]} ${sT} = <b>${diag}</b> | ↑: <b>${up}</b> | ←: <b>${left}</b><br>Max: <b>${maxVal}</b>`;
+        drawMatrix(i,j); step++;
+    }
+
+    function fastForward() { 
+        // Forzamos una comprobación de inicio en la primera llamada
+        nextStep();
+        let t = seq1.length * seq2.length; 
+        while(step <= t + 1) nextStep(); 
+    }
+    return { init, nextStep, fastForward, reset: init };
+})();
+
+
+
+/* ============================================================
+   INIT ALL ON LOAD
+   ============================================================ */
+window.onload = () => {
+    SW.init();
+    NW.init();
+};
+</script>
+</body>
+</html>
