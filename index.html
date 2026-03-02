@@ -1,0 +1,2337 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenomX Visualizer - Bioinformática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Poppins:wght@700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050813;
+            --bg-alt: #0c1228;
+            --fg: #e8eeff;
+            --fg-label: #4a5a8a;
+            --border: #1a2a50;
+            --primary: #00f5ff;
+            --primary-hover: #00e0ef;
+            --success: #00e5a0;
+            --danger: #ff4d6d;
+            --warning: #ffcc00;
+            --highlight: #9b59ff;
+            --pink: #ff2d78;
+            --inactive: #4a5a8a;
+            --card: #0f1835;
+            --shadow: 0 4px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--bg);
+            color: var(--fg);
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background-color: var(--bg-alt);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .navbar-brand {
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-right: 1px solid var(--border);
+            letter-spacing: -0.5px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--inactive);
+            padding: 16px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn[data-tab="sw"].active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn[data-tab="nw"].active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ===== CONTENEDORES ===== */
+        .tab-panel {
+            display: none;
+            padding: 30px 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 0;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        h3 {
+            color: var(--fg);
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .controls {
+            background-color: var(--bg-alt);
+            padding: 24px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .controls label {
+            color: var(--fg-label);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .controls input {
+            background-color: #f8fafc;
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin: 0 10px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
+        }
+
+        .controls input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .ctrl-btn {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .ctrl-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+
+        .explanation-box {
+            background-color: #f8fafc;
+            padding: 20px;
+            margin: 10px auto 24px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            text-align: left;
+            min-height: 80px;
+            line-height: 1.6;
+            color: var(--fg-label);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+        }
+
+        /* ===== TABLAS GENERALES ===== */
+        .matrix-wrapper {
+            overflow-x: auto;
+            margin: 20px auto;
+            max-width: 95%;
+            padding-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background-color: var(--bg-alt);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 2px solid #cbd5e1;
+        }
+
+        td,
+        th {
+            border: 1.5px solid #cbd5e1;
+            position: relative;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: var(--fg);
+            font-size: 13px;
+            padding: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        /* ALINEAMIENTOS (SW / NW) */
+        .aln-cell {
+            width: 140px;
+            height: 110px;
+            background-color: #ffffff;
+            transition: all 0.2s;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .aln-cell:hover {
+            background-color: #f8fafc;
+        }
+
+        .v-max {
+            font-size: 20px;
+            font-weight: 900;
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            z-index: 3;
+            color: var(--primary);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .mini-val {
+            position: absolute;
+            font-size: 9px;
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+            line-height: 1.2;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .mini-val.chosen {
+            color: #ffffff;
+            background: var(--primary);
+            font-weight: 700;
+            z-index: 2;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .v-diag {
+            top: 8px;
+            left: 8px;
+            border-left: 2px solid #e2e8f0;
+        }
+
+        .v-up {
+            top: 8px;
+            right: 8px;
+            border-right: 2px solid #e2e8f0;
+        }
+
+        .v-left {
+            bottom: 10px;
+            left: 8px;
+            border-left: 2px solid #e2e8f0;
+        }
+
+        .v-edge {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            font-size: 11px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 4px;
+            color: var(--fg);
+        }
+
+        .highlight {
+            background-color: rgba(0, 245, 255, 0.32) !important;
+            box-shadow: inset 0 0 0 3px var(--primary), inset 0 0 20px rgba(0, 245, 255, 0.20) !important;
+            z-index: 10;
+        }
+
+        .path-cell {
+            background-color: rgba(0, 229, 160, 0.32) !important;
+            box-shadow: inset 0 0 0 3px var(--success), inset 0 0 20px rgba(0, 229, 160, 0.20) !important;
+            z-index: 5;
+        }
+
+        /* DISEÑO LATERAL */
+        .final-results-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 24px;
+            margin: 32px auto;
+            width: 98%;
+        }
+
+        .result-box {
+            display: none;
+            margin: 0;
+            background-color: var(--bg-alt);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            width: fit-content;
+            min-width: 450px;
+            box-shadow: var(--shadow);
+        }
+
+        .solution-item {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .solution-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .solution-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+        }
+
+        .alignment-container {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .seq-row,
+        .pipe-row {
+            display: flex;
+            justify-content: center;
+        }
+
+        .seq-row span,
+        .pipe-row span {
+            width: 24px;
+            text-align: center;
+        }
+
+        .pipe-row span {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        /* NUEVOS ESTILOS DE RESULTADOS */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-card.score {
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+            border-color: rgba(79, 70, 229, 0.1);
+        }
+
+        .stat-card.identity {
+            color: var(--highlight);
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-card.gaps {
+            color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+            border-color: rgba(245, 158, 11, 0.1);
+        }
+
+        .stat-card.mismatch {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .bio-interpretation {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--danger);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 24px;
+            text-align: left;
+            max-width: 800px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .bio-interpretation h4 {
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--fg);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .bio-interpretation p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--fg-label);
+        }
+
+        .bio-interpretation b {
+            color: var(--fg);
+            font-weight: 600;
+        }
+
+        /* MATRICES COMPACTAS */
+        .compact-container {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-top: 0;
+            flex-wrap: wrap;
+        }
+
+        .compact-box {
+            background: var(--bg-alt);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            min-width: 300px;
+        }
+
+        .compact-box h4 {
+            color: var(--fg-label);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .compact-table {
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            margin: 0 auto;
+            border: 2px solid #cbd5e1;
+        }
+
+        .compact-table th,
+        .compact-table td {
+            border: 1.5px solid #cbd5e1;
+            width: 34px;
+            height: 34px;
+            text-align: center;
+        }
+
+        .compact-table th {
+            background: #f1f5f9;
+            color: var(--fg);
+            font-weight: 700;
+        }
+
+        .compact-table td {
+            color: var(--fg);
+            background: #ffffff;
+            font-weight: 500;
+        }
+
+        .compact-table td.score-val {
+            color: var(--primary);
+            font-weight: 700;
+            background: #f8fafc;
+        }
+
+        .compact-table td.arrow-val {
+            color: var(--highlight);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .compact-table td.bg-init {
+            background: #f8fafc;
+            color: var(--fg-label);
+        }
+
+        .match-text {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .mismatch-text {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .main-header { padding: 24px 12px; }
+            .main-title { font-size: clamp(18px, 6vw, 32px); letter-spacing: 1px; }
+            .main-subtitle { font-size: 10px; padding: 5px 14px; }
+            .header-divider { display: none; }
+
+            .navbar { gap: 0; padding: 0 4px; }
+            .tab-btn { padding: 12px 8px; font-size: 11px; letter-spacing: 0; }
+
+            .tab-panel { padding: 16px 8px; }
+            h2 { font-size: 16px; letter-spacing: 1px; margin-bottom: 16px; }
+
+            /* Controls stacked */
+            .controls {
+                padding: 16px 12px;
+                width: 95%;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .controls label {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                font-size: 12px;
+                width: 100%;
+            }
+            .controls input { margin: 0; width: 100% !important; font-size: 14px; }
+            .controls > div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+            /* Buttons full width on mobile */
+            .ctrl-btn { width: calc(50% - 6px); margin: 3px; font-size: 12px; padding: 10px 8px; }
+
+            /* Matrix handled by JS scaleMatrix() */
+            .matrix-wrapper {
+                max-width: 100%;
+                overflow-x: auto;
+                display: flex;
+                justify-content: center;
+            }
+
+            /* Results */
+            .final-results-layout { flex-direction: column; gap: 16px; }
+            .result-box { min-width: 0; width: 100%; padding: 14px; }
+            .compact-container { flex-direction: column; }
+            .compact-box { min-width: 0; width: 100%; overflow-x: auto; }
+            .alignment-container { font-size: 14px; overflow-x: auto; width: 100%; }
+            .stats-bar { gap: 8px; }
+            .stat-card { font-size: 11px; padding: 6px 10px; }
+            .bio-interpretation { padding: 14px; }
+
+            /* BWT step cards */
+            .step-card { padding: 18px 14px; }
+            .step-title { font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-title { font-size: clamp(15px, 5vw, 22px); }
+            .tab-btn { padding: 10px 6px; font-size: 10px; }
+            .ctrl-btn { width: 100%; }
+
+            h2 { font-size: 13px; }
+        }
+
+        /* === ESTILOS DEL ENCABEZADO PRINCIPAL === */
+        .main-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            padding: 50px 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .main-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            letter-spacing: -1.5px;
+        }
+
+        .dna-icon {
+            font-size: 4.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            animation: dna-bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes dna-bounce {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-15px) rotate(10deg);
+            }
+        }
+
+        .main-subtitle {
+            margin-top: 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .sw-label-text {
+            color: var(--primary);
+        }
+
+        .nw-label-text {
+            color: var(--success);
+        }
+
+        .header-divider {
+            color: var(--border);
+            font-weight: 300;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--inactive);
+            border-radius: 10px;
+            border: 2px solid var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--fg-label);
+        }
+
+        /* DARK NEON EXTRA STYLES */
+        body {
+            background: var(--bg) !important;
+            color: var(--fg) !important;
+        }
+
+        .main-header {
+            background: linear-gradient(180deg, #0a1228 0%, transparent 100%);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            overflow: hidden;
+            transform-origin: top center;
+            will-change: opacity, transform;
+        }
+
+        .navbar {
+            background: rgba(5,8,19,0.95) !important;
+            border-bottom: 1px solid var(--border) !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 101 !important;
+        }
+
+        .main-subtitle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 100px;
+            padding: 6px 20px;
+            margin-bottom: 20px;
+        }
+
+        .main-title {
+            font-family: 'Orbitron', monospace !important;
+            font-weight: 900;
+            font-size: clamp(28px, 4vw, 56px);
+            letter-spacing: 3px;
+            display: block;
+            text-align: center;
+            position: relative;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .main-title .dna-icon {
+            display: none;
+        }
+
+        .main-title.sw {
+            background: linear-gradient(135deg, #00f5ff 0%, #fff 40%, #9b59ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-title.nw {
+            background: linear-gradient(135deg, #00e5a0 0%, #fff 40%, #00f5ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-title.bwt {
+            background: linear-gradient(135deg, #00f5ff 0%, #fff 40%, #ff2d78 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .tab-panel {
+            animation: fadeUp 0.5s forwards;
+        }
+
+        .tab-btn {
+            font-family: 'Orbitron', monospace !important;
+            background: transparent !important;
+            font-weight: 700 !important;
+            border-bottom: 2px solid transparent !important;
+            color: var(--inactive) !important;
+        }
+
+        .tab-btn.active {
+            color: var(--fg) !important;
+            border-bottom-color: var(--primary) !important;
+        }
+
+        .tab-btn[data-tab="nw"].active {
+            border-bottom-color: var(--success) !important;
+        }
+
+        .tab-btn[data-tab="bwt"].active {
+            border-bottom-color: #ff2d78 !important;
+        }
+
+        .navbar {
+            background: #050813 !important;
+            border-bottom: 1px solid var(--border) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        .controls {
+            background: linear-gradient(135deg, var(--card), #0a1228) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 24px !important;
+        }
+
+        .controls input {
+            background: #060c1a !important;
+            border: 1.5px solid rgba(0, 245, 255, 0.3) !important;
+            color: var(--fg) !important;
+            border-radius: 12px !important;
+        }
+
+        .ctrl-btn {
+            background: linear-gradient(135deg, var(--primary), var(--highlight)) !important;
+            border-radius: 12px !important;
+            color: #050813 !important;
+            font-family: 'Orbitron', monospace !important;
+            font-weight: 900 !important;
+        }
+
+        .explanation-box {
+            background: linear-gradient(135deg, var(--card), #0a1228) !important;
+            border: 1px solid var(--border) !important;
+            border-left: 4px solid var(--primary) !important;
+            color: var(--fg) !important;
+        }
+
+        table {
+            background: var(--card) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 16px !important;
+        }
+
+        th {
+            background: #0a1228 !important;
+            color: var(--primary) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        td,
+        th {
+            border: 1px solid var(--border) !important;
+        }
+
+        .aln-cell {
+            background: #060c1a !important;
+        }
+
+        .v-max {
+            color: var(--primary) !important;
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.6) !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .mini-val {
+            background: #050813 !important;
+            border: 1px solid var(--border) !important;
+            color: var(--fg-label) !important;
+        }
+
+        .mini-val.chosen {
+            background: var(--success) !important;
+            border-color: var(--success) !important;
+            color: #050813 !important;
+        }
+
+        .compact-box {
+            background: #0a1228 !important;
+            border: 1px solid rgba(0, 245, 255, 0.2) !important;
+        }
+
+        .compact-table th {
+            background: #060c1a !important;
+            color: var(--primary) !important;
+        }
+
+        .compact-table td {
+            background: #050813 !important;
+        }
+
+        .compact-table td.score-val {
+            color: var(--highlight) !important;
+            background: #0c1835 !important;
+        }
+
+        .compact-table td.arrow-val {
+            color: var(--success) !important;
+        }
+
+        .compact-table td.bg-init {
+            color: var(--fg-label) !important;
+            background: #050813 !important;
+        }
+
+        .result-box {
+            background: var(--card) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        .solution-title {
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+        }
+
+        .stat-card {
+            background: #060c1a !important;
+            border: 1px solid #1a2a50 !important;
+        }
+
+        .stat-card.score {
+            color: var(--primary) !important;
+        }
+
+        .stat-card.identity {
+            color: var(--highlight) !important;
+        }
+
+        .stat-card.gaps {
+            color: var(--warning) !important;
+        }
+
+        .stat-card.mismatch {
+            color: var(--danger) !important;
+        }
+
+        .bio-interpretation {
+            background: #0a1228 !important;
+            color: var(--fg) !important;
+            border-left: 4px solid var(--danger) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        .alignment-container {
+            background: #050813 !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        .pipe-row span {
+            color: var(--primary) !important;
+        }
+
+        h2,
+        h3,
+        h4 {
+            font-family: 'Orbitron', monospace !important;
+            color: var(--fg) !important;
+            text-transform: uppercase;
+        }
+
+        /* BWT STEP CARDS */
+        .step-card {
+            background: linear-gradient(135deg, var(--card) 0%, #0a1020 100%);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        .step-num-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 2px solid rgba(0, 245, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+        }
+
+        .step-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .char-box {
+            width: 34px;
+            height: 34px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1.5px solid rgba(0, 245, 255, 0.5);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0 2px;
+        }
+
+        .char-wrap {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .char-idx {
+            font-size: 10px;
+            color: var(--fg-label);
+        }
+
+        .badge {
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 8px;
+            padding: 3px 12px;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .rot-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+
+        .rot-chars {
+            display: flex;
+            background: #060d1e;
+            border-radius: 8px;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+        }
+
+        .formula {
+            background: linear-gradient(135deg, #070e1e, #0a1228);
+            border: 1px solid rgba(155, 89, 255, 0.2);
+            border-left: 3px solid var(--highlight);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 6px 0;
+            font-size: 12px;
+            color: var(--highlight);
+            display: inline-block;
+        }
+
+        .range-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #08112a, #0c1830);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px 25px;
+            min-width: 90px;
+        }
+
+        .range-label {
+            color: var(--fg-label);
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .range-val {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--highlight));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* AMBIENT + FOOTER */
+        .ambient-glow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image: linear-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: #0a1228;
+            color: var(--fg-label);
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-glow"
+        style="width:600px;height:600px;background:radial-gradient(circle,#00f5ff 0%,transparent 70%);top:-200px;left:-200px;">
+    </div>
+    <div class="ambient-glow"
+        style="width:500px;height:500px;background:radial-gradient(circle,#9b59ff 0%,transparent 70%);top:100px;right:-200px;">
+    </div>
+    <div class="grid-bg"></div>
+
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="main-header">
+        <div class="main-subtitle">
+            <div
+                style="width:6px; height:6px; background: var(--primary); border-radius:50%; box-shadow: 0 0 10px var(--primary);">
+            </div>
+            <span id="header-subtitle"
+                style="color: var(--primary); font-size: 11px; font-family: 'Orbitron',monospace; letter-spacing: 3px; text-transform: uppercase;">Alineamiento
+                Local</span>
+        </div>
+        <h1 class="main-title sw" id="header-title"><span class="dna-icon">🧬</span> GenomX Visualizer</h1>
+        <p style="color: var(--inactive); font-size: 14px; letter-spacing: 1px; margin-bottom:10px;">Herramientas
+            avanzadas de bioinformatica</p>
+    </header>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <button class="tab-btn active" data-tab="sw"
+            id="tab-sw">Smith-Waterman</button>
+        <button class="tab-btn" data-tab="nw"
+            id="tab-nw">Needleman-Wunsch</button>
+        <button class="tab-btn" data-tab="bwt"
+            id="tab-bwt">BWT Algoritmo</button>
+    </nav>
+
+    <!-- ==================== SMITH-WATERMAN ==================== -->
+    <div id="panel-sw" class="tab-panel active">
+        <h2>Smith-Waterman (Alineamiento Local Multi-Solución)</h2>
+        <div class="controls">
+            <label>Seq 1: <input type="text" id="sw-seq1" value="ATAT" style="width:100px;"></label>
+            <label>Seq 2: <input type="text" id="sw-seq2" value="TATA" style="width:100px;"></label>
+            <div style="margin-top:10px;">
+                <label>Match: <input type="number" id="sw-match" value="1" style="width:80px;"></label>
+                <label>Mismatch: <input type="number" id="sw-mismatch" value="-1" style="width:80px;"></label>
+                <label>Gap: <input type="number" id="sw-gap" value="-1" style="width:80px;"></label>
+            </div>
+        </div><br>
+        <button class="ctrl-btn" id="sw-calc">Calcular</button>
+        <button class="ctrl-btn" id="sw-step">Paso a Paso</button>
+        <button class="ctrl-btn" id="sw-reset">Reiniciar</button>
+
+        <div id="sw-explanation" class="explanation-box">Haz clic en <b></b>"Paso a Paso"</b> para comenzar paso a paso,
+            o <b>"Calcular"</b> para ver el resultado completo.</div>
+        <div class="matrix-wrapper">
+            <div id="sw-matrix"></div>
+        </div>
+
+        <div class="final-results-layout">
+            <!-- NUEVAS MATRICES COMPACTAS SW -->
+            <div id="sw-compact-area" class="compact-container" style="display:none; margin-top:0;">
+                <div class="compact-box">
+                    <h4>📊 MATRIZ DE PUNTAJES (COMPACTA)</h4>
+                    <div id="sw-compact-scores"></div>
+                </div>
+                <div class="compact-box">
+                    <h4>🧭 MATRIZ DE FLECHAS (DIRECCIÓN)</h4>
+                    <div id="sw-compact-arrows"></div>
+                </div>
+            </div>
+
+            <div id="sw-alignment-box" class="result-box" style="border: 1px solid var(--border);">
+                <h3>Rutas Locales Óptimas</h3>
+                <div id="sw-alignment-result" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== NEEDLEMAN-WUNSCH ==================== -->
+    <div id="panel-nw" class="tab-panel">
+        <h2>Needleman-Wunsch (Alineamiento Global)</h2>
+        <div class="controls">
+            <label>Seq 1: <input type="text" id="nw-seq1" value="ACGTGA" style="width:120px;"></label>
+            <label>Seq 2: <input type="text" id="nw-seq2" value="ACTAGA" style="width:120px;"></label>
+            <div style="margin-top:10px;">
+                <label>Match: <input type="number" id="nw-match" value="1" style="width:80px;"></label>
+                <label>Mismatch: <input type="number" id="nw-mismatch" value="-1" style="width:80px;"></label>
+                <label>Gap: <input type="number" id="nw-gap" value="-1" style="width:80px;"></label>
+            </div>
+        </div><br>
+        <button class="ctrl-btn" id="nw-calc">Calcular</button>
+        <button class="ctrl-btn" id="nw-step">Paso a Paso</button>
+        <button class="ctrl-btn" id="nw-reset">Reiniciar</button>
+
+        <div id="nw-explanation" class="explanation-box">Haz clic en <b>"Paso a Paso"</b> para comenzar paso a paso, o
+            <b>"Calcular"</b> para ver el resultado completo.</div>
+        <div class="matrix-wrapper">
+            <div id="nw-matrix"></div>
+        </div>
+
+        <div class="final-results-layout">
+            <!-- NUEVAS MATRICES COMPACTAS NW -->
+            <div id="nw-compact-area" class="compact-container" style="display:none; margin-top:0;">
+                <div class="compact-box">
+                    <h4>📊 MATRIZ DE PUNTAJES (COMPACTA)</h4>
+                    <div id="nw-compact-scores"></div>
+                </div>
+                <div class="compact-box">
+                    <h4>🧭 MATRIZ DE FLECHAS (DIRECCIÓN)</h4>
+                    <div id="nw-compact-arrows"></div>
+                </div>
+            </div>
+
+            <div id="nw-alignment-box" class="result-box" style="border: 1px solid var(--success);">
+                <h3>Alineamiento Global (Traceback)</h3>
+                <div class="alignment-container" id="nw-alignment-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           TABS LOGIC
+           ============================================================ */
+        function showTab(name, color, title, subtitle) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            var btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+            if (btn) btn.classList.add('active');
+            if (title) {
+                var hTitle = document.getElementById('header-title');
+                var hSub = document.getElementById('header-subtitle');
+                hTitle.className = 'main-title ' + name;
+                hTitle.innerHTML = '<span class="dna-icon">🧬</span> ' + title;
+                if (hSub) { hSub.innerText = subtitle; hSub.style.color = color; }
+            }
+        }
+
+
+        /* ============================================================
+           SMITH-WATERMAN 
+           ============================================================ */
+        const SW = (() => {
+            let MATCH = 1, MISMATCH = -1, GAP = -1;
+            const palette = ['#f7768e', '#9ece6a', '#7aa2f7', '#e0af68', '#bb9af7', '#7dcfff'];
+            let seq1, seq2, matrix, details, step, pathMap;
+
+            function init() {
+                seq1 = document.getElementById('sw-seq1').value.toUpperCase().trim() || "ATAT";
+                seq2 = document.getElementById('sw-seq2').value.toUpperCase().trim() || "TATA";
+                MATCH = parseInt(document.getElementById('sw-match').value) || 1;
+                MISMATCH = parseInt(document.getElementById('sw-mismatch').value) || -1;
+                GAP = parseInt(document.getElementById('sw-gap').value) || -1;
+
+                matrix = Array(seq1.length + 1).fill(null).map(() => Array(seq2.length + 1).fill(0));
+                details = Array(seq1.length + 1).fill(null).map(() => Array(seq2.length + 1).fill(null));
+                pathMap = {};
+                for (let i = 0; i <= seq1.length; i++) matrix[i][0] = 0;
+                for (let j = 0; j <= seq2.length; j++) matrix[0][j] = 0;
+                step = 1;
+                document.getElementById('sw-explanation').innerHTML = "Bordes inicializados en 0.<br>Haz clic en 'Paso a Paso'.";
+                document.getElementById('sw-alignment-box').style.display = 'none';
+                document.getElementById('sw-compact-area').style.display = 'none';
+                drawMatrix();
+            }
+
+            function drawCompactMatrices() {
+                let scoresHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+                let arrowsHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+                for (let j = 0; j < seq2.length; j++) {
+                    scoresHtml += `<th>${seq2[j]}</th>`;
+                    arrowsHtml += `<th>${seq2[j]}</th>`;
+                }
+                scoresHtml += '</tr>';
+                arrowsHtml += '</tr>';
+
+                for (let i = 0; i <= seq1.length; i++) {
+                    scoresHtml += `<tr><th>${i === 0 ? '-' : seq1[i - 1]}</th>`;
+                    arrowsHtml += `<tr><th>${i === 0 ? '-' : seq1[i - 1]}</th>`;
+                    for (let j = 0; j <= seq2.length; j++) {
+                        const val = matrix[i][j];
+                        const d = details[i][j];
+                        let arrows = '';
+                        if (d && !d.isEdge) {
+                            if (d.diag === d.max && d.max > 0) arrows += '↖';
+                            if (d.up === d.max && d.max > 0) arrows += '↑';
+                            if (d.left === d.max && d.max > 0) arrows += '←';
+                        } else if (i === 0 && j === 0) {
+                            arrows = '•';
+                        }
+
+                        scoresHtml += `<td class="${(i === 0 || j === 0) ? 'bg-init' : 'score-val'}">${val}</td>`;
+                        arrowsHtml += `<td class="arrow-val">${arrows || ''}</td>`;
+                    }
+                    scoresHtml += '</tr>';
+                    arrowsHtml += '</tr>';
+                }
+                scoresHtml += '</table>';
+                arrowsHtml += '</table>';
+
+                document.getElementById('sw-compact-scores').innerHTML = scoresHtml;
+                document.getElementById('sw-compact-arrows').innerHTML = arrowsHtml;
+                document.getElementById('sw-compact-area').style.display = 'flex';
+            }
+
+            function drawMatrix(hI = -1, hJ = -1) {
+                let html = '<table><tr><th></th><th>-</th>';
+                for (let j = 0; j < seq2.length; j++) html += '<th>' + seq2[j] + '</th>';
+                html += '</tr>';
+                for (let i = 0; i <= seq1.length; i++) {
+                    html += '<tr>';
+                    html += i === 0 ? '<th>-</th>' : '<th>' + seq1[i - 1] + '</th>';
+                    for (let j = 0; j <= seq2.length; j++) {
+                        let hCls = (i === hI && j === hJ) ? 'highlight' : '';
+                        let key = i + '-' + j;
+                        let cellStyle = '';
+                        if (pathMap[key] && pathMap[key].length > 0) {
+                            let sols = pathMap[key];
+                            if (sols.length === 1) {
+                                let c = palette[sols[0] % palette.length];
+                                cellStyle = `box-shadow:inset 0 0 0 3px ${c},inset 0 0 20px ${c}88;background-color:${c}88;z-index:5;`;
+                            } else {
+                                let shadows = [], gradStops = [], pct = 100 / sols.length;
+                                sols.forEach((sIdx, idx) => {
+                                    let c = palette[sIdx % palette.length];
+                                    shadows.push(`inset 0 0 0 ${(idx + 1) * 3}px ${c}`);
+                                    gradStops.push(`${c}88 ${idx * pct}%`, `${c}55 ${(idx + 1) * pct}%`);
+                                });
+                                cellStyle = `box-shadow:${shadows.join(',')};background:linear-gradient(135deg,${gradStops.join(',')});z-index:5;`;
+                            }
+                        }
+                        html += `<td class='aln-cell ${hCls}' style='${cellStyle}'>`;
+                        if (i === 0 || j === 0) {
+                            html += `<div class='v-max'>${matrix[i][j]}</div>`;
+                        } else if (details[i][j]) {
+                            let d = details[i][j], zero = (d.max === 0);
+                            let diagChosen = !zero && d.diag === d.max;
+                            let upChosen = !zero && d.up === d.max;
+                            let leftChosen = !zero && d.left === d.max;
+                            html += `<div class='mini-val v-diag${diagChosen ? " chosen" : ""}'>↖ ${d.diagStr}=${d.diag}</div>`;
+                            html += `<div class='mini-val v-up${upChosen ? " chosen" : ""}'>↑ ${d.upStr}=${d.up}</div>`;
+                            html += `<div class='mini-val v-left${leftChosen ? " chosen" : ""}'>← ${d.leftStr}=${d.left}</div>`;
+                            html += `<div class='v-max'>${d.max}</div>`;
+                        }
+                        html += '</td>';
+                    }
+                    html += '</tr>';
+                }
+                html += '</table>';
+                document.getElementById('sw-matrix').innerHTML = html;
+                setTimeout(scaleMatrix, 50);
+            }
+
+            function showAlignment() {
+                let maxScore = 0; let startCells = []; let allAlignments = []; pathMap = {};
+                for (let i = 0; i <= seq1.length; i++) for (let j = 0; j <= seq2.length; j++) if (matrix[i][j] > maxScore) maxScore = matrix[i][j];
+
+                if (maxScore === 0) {
+                    document.getElementById('sw-alignment-result').innerHTML = "<div style='padding:20px; color:var(--warning);'>No se encontró un alineamiento local con puntuación mayor a 0. Intenta aumentar el valor de 'Match' o usar secuencias con más similitud.</div>";
+                    document.getElementById('sw-alignment-box').style.display = 'block';
+                    return;
+                }
+                for (let i = 0; i <= seq1.length; i++) for (let j = 0; j <= seq2.length; j++) if (matrix[i][j] === maxScore) startCells.push({ i, j });
+
+                function explorePath(i, j, a1, p, a2, cells) {
+                    if (matrix[i][j] === 0) {
+                        let sIdx = allAlignments.length, color = palette[sIdx % palette.length];
+                        allAlignments.push({ a1, p, a2, color });
+                        cells.forEach(cell => {
+                            let k = cell.i + '-' + cell.j;
+                            if (!pathMap[k]) pathMap[k] = [];
+                            if (!pathMap[k].includes(sIdx)) pathMap[k].push(sIdx);
+                        });
+                        return;
+                    }
+                    let d = details[i][j], c1 = seq1[i - 1], c2 = seq2[j - 1], m = c1 === c2;
+                    if (d.diag === d.max) explorePath(i - 1, j - 1, [c1, ...a1], [m ? '|' : '&nbsp;', ...p], [c2, ...a2], [...cells, { i: i - 1, j: j - 1 }]);
+                    if (d.up === d.max) explorePath(i - 1, j, [c1, ...a1], ['&nbsp;', ...p], ['-', ...a2], [...cells, { i: i - 1, j: j }]);
+                    if (d.left === d.max) explorePath(i, j - 1, ['-', ...a1], ['&nbsp;', ...p], [c2, ...a2], [...cells, { i: i, j: j - 1 }]);
+                }
+
+                startCells.forEach(s => explorePath(s.i, s.j, [], [], [], [{ i: s.i, j: s.j }]));
+
+                let html = '';
+                allAlignments.forEach((aln, idx) => {
+                    const mCount = aln.p.filter(c => c === '|').length;
+                    const gCount = aln.a1.filter(c => c === '-').length + aln.a2.filter(c => c === '-').length;
+                    const mmCount = aln.p.length - mCount - gCount;
+                    const identity = ((mCount / aln.p.length) * 100).toFixed(0);
+
+                    let bioStatus = identity > 70 ? "Alta similitud" : identity > 30 ? "Similitud moderada" : "Divergencia alta";
+                    let bioColor = identity > 70 ? "var(--success)" : identity > 30 ? "var(--warning)" : "var(--danger)";
+
+                    html += `<div class="solution-item" style="border-bottom-color:${aln.color}66">`;
+                    html += `<div class="solution-title" style="color:${aln.color}">Solución ${idx + 1}</div>`;
+
+                    // Stats Bar
+                    html += `<div class="stats-bar">
+                <div class="stat-card score">Score: ${maxScore}</div>
+                <div class="stat-card identity">Identidad: ${mCount}/${aln.p.length} (${identity}%)</div>
+                <div class="stat-card gaps">Gaps: ${gCount}</div>
+                <div class="stat-card mismatch">Mismatches: ${mmCount}</div>
+            </div>`;
+
+                    html += `<div class='alignment-container'>`;
+                    html += `<div class='seq-row'>` + aln.a2.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                    html += `<div class='pipe-row'>` + aln.p.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                    html += `<div class='seq-row'>` + aln.a1.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                    html += `</div>`;
+
+                    // Bio Interpretation
+                    html += `<div class="bio-interpretation" style="border-left-color: ${bioColor}">
+                <h4>💡 Interpretación Biológica: ${bioStatus}</h4>
+                <p>Las secuencias muestran un <b>${identity}%</b> de identidad. ${identity > 30 ? "Es probable que compartan un ancestro común o una función similar." : "Es poco probable que estén relacionadas evolutivamente."}</p>
+                ${gCount > 0 ? `<p style="margin-top:10px;"><b>Gaps detectados (${gCount}):</b> Indican posibles <b>inserciones</b> o <b>deleciones</b> (indels) en la historia evolutiva.</p>` : ""}
+            </div>`;
+
+                    html += `</div>`;
+                });
+                document.getElementById('sw-alignment-result').innerHTML = html;
+                document.getElementById('sw-alignment-box').style.display = 'block';
+            }
+
+            function nextStep() {
+                // Detectar cambios en los inputs o puntuaciones
+                const currentS1 = document.getElementById('sw-seq1').value.toUpperCase().trim() || "ATAT";
+                const currentS2 = document.getElementById('sw-seq2').value.toUpperCase().trim() || "TATA";
+                const currentM = parseInt(document.getElementById('sw-match').value) || 1;
+                const currentMM = parseInt(document.getElementById('sw-mismatch').value) || -1;
+                const currentG = parseInt(document.getElementById('sw-gap').value) || -1;
+
+                let total = seq1.length * seq2.length;
+
+                if (currentS1 !== seq1 || currentS2 !== seq2 || currentM !== MATCH || currentMM !== MISMATCH || currentG !== GAP || step > total + 1) {
+                    init();
+                    total = seq1.length * seq2.length;
+                }
+
+                if (step > total) {
+                    if (step === total + 1) {
+                        document.getElementById('sw-explanation').innerHTML = "<span class='match-text'>¡Matriz completada!</span> Pintando <b class='mismatch-text'>TODAS</b> las rutas posibles...";
+                        showAlignment();
+                        drawMatrix();
+                        drawCompactMatrices();
+                        step++;
+                    }
+                    return;
+                }
+                let i = Math.floor((step - 1) / seq2.length) + 1, j = ((step - 1) % seq2.length) + 1;
+                let c1 = seq1[i - 1], c2 = seq2[j - 1], isM = (c1 === c2), score = isM ? MATCH : MISMATCH;
+                let diag = matrix[i - 1][j - 1] + score, up = matrix[i - 1][j] + GAP, left = matrix[i][j - 1] + GAP;
+                let maxVal = Math.max(0, diag, up, left);
+                matrix[i][j] = maxVal;
+                details[i][j] = {
+                    diag, up, left, max: maxVal,
+                    diagStr: `${matrix[i - 1][j - 1]}${score >= 0 ? '+' + score : score}`,
+                    upStr: `${matrix[i - 1][j]}${GAP >= 0 ? '+' + GAP : GAP}`,
+                    leftStr: `${matrix[i][j - 1]}${GAP >= 0 ? '+' + GAP : GAP}`
+                };
+                let sT = isM ? `<span class='match-text'>+${MATCH}</span>` : `<span class='mismatch-text'>${MISMATCH}</span>`;
+                document.getElementById('sw-explanation').innerHTML = `
+            Calculando <b>(${i},${j})</b> | <b>${c1}</b> vs <b>${c2}</b><br>
+            ↖ Diagonal: ${matrix[i - 1][j - 1]} ${sT} = <b>${diag}</b> | ↑ Arriba: <b>${up}</b> | ← Izquierda: <b>${left}</b><br>
+            Max: ${maxVal === 0 ? `<span class='reset-text'>0 (Reinicio)</span>` : `<b class='warning'>${maxVal}</b>`}`;
+                drawMatrix(i, j); step++;
+            }
+
+            function fastForward() {
+                // Forzamos una comprobación de inicio en la primera llamada
+                nextStep();
+                let t = seq1.length * seq2.length;
+                while (step <= t + 1) nextStep();
+            }
+            return { init, nextStep, fastForward, reset: init };
+        })();
+
+        /* ============================================================
+           NEEDLEMAN-WUNSCH
+           ============================================================ */
+        const NW = (() => {
+            let MATCH = 1, MISMATCH = -1, GAP = -1;
+            let seq1, seq2, matrix, details, step, pathCoords;
+
+            function init() {
+                seq1 = document.getElementById('nw-seq1').value.toUpperCase().trim() || "ACGTGA";
+                seq2 = document.getElementById('nw-seq2').value.toUpperCase().trim() || "ACTAGA";
+                MATCH = parseInt(document.getElementById('nw-match').value) || 1;
+                MISMATCH = parseInt(document.getElementById('nw-mismatch').value) || -1;
+                GAP = parseInt(document.getElementById('nw-gap').value) || -1;
+
+                matrix = Array(seq1.length + 1).fill(null).map(() => Array(seq2.length + 1).fill(0));
+                details = Array(seq1.length + 1).fill(null).map(() => Array(seq2.length + 1).fill(null));
+                pathCoords = [];
+                for (let i = 0; i <= seq1.length; i++) {
+                    matrix[i][0] = i * GAP;
+                    if (i > 0) details[i][0] = { isEdge: true, type: 'up', str: `${matrix[i - 1][0]}${GAP >= 0 ? '+' + GAP : GAP}=${matrix[i][0]}` };
+                }
+                for (let j = 0; j <= seq2.length; j++) {
+                    matrix[0][j] = j * GAP;
+                    if (j > 0) details[0][j] = { isEdge: true, type: 'left', str: `${matrix[0][j - 1]}${GAP >= 0 ? '+' + GAP : GAP}=${matrix[0][j]}` };
+                }
+                step = 1;
+                document.getElementById('nw-explanation').innerHTML = "Matrices inicializadas.<br>Haz clic en 'Paso a Paso'.";
+                document.getElementById('nw-alignment-box').style.display = 'none';
+                document.getElementById('nw-compact-area').style.display = 'none';
+                drawMatrix();
+            }
+
+            function drawCompactMatrices() {
+                let scoresHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+                let arrowsHtml = '<table class="compact-table"><tr><th></th><th>-</th>';
+                for (let j = 0; j < seq2.length; j++) {
+                    scoresHtml += `<th>${seq2[j]}</th>`;
+                    arrowsHtml += `<th>${seq2[j]}</th>`;
+                }
+                scoresHtml += '</tr>';
+                arrowsHtml += '</tr>';
+
+                for (let i = 0; i <= seq1.length; i++) {
+                    scoresHtml += `<tr><th>${i === 0 ? '-' : seq1[i - 1]}</th>`;
+                    arrowsHtml += `<tr><th>${i === 0 ? '-' : seq1[i - 1]}</th>`;
+                    for (let j = 0; j <= seq2.length; j++) {
+                        const val = matrix[i][j];
+                        const d = details[i][j];
+                        let arrows = '';
+                        if (d) {
+                            if (d.isEdge) {
+                                arrows = d.type === 'up' ? '↑' : (d.type === 'left' ? '←' : '');
+                            } else {
+                                if (d.diag === d.max) arrows += '↖';
+                                if (d.up === d.max) arrows += '↑';
+                                if (d.left === d.max) arrows += '←';
+                            }
+                        } else if (i === 0 && j === 0) {
+                            arrows = '•';
+                        }
+
+                        scoresHtml += `<td class="${(i === 0 || j === 0) ? 'bg-init' : 'score-val'}">${val}</td>`;
+                        arrowsHtml += `<td class="arrow-val">${arrows || ''}</td>`;
+                    }
+                    scoresHtml += '</tr>';
+                    arrowsHtml += '</tr>';
+                }
+                scoresHtml += '</table>';
+                arrowsHtml += '</table>';
+
+                document.getElementById('nw-compact-scores').innerHTML = scoresHtml;
+                document.getElementById('nw-compact-arrows').innerHTML = arrowsHtml;
+                document.getElementById('nw-compact-area').style.display = 'flex';
+            }
+
+            function drawMatrix(hI = -1, hJ = -1) {
+                let html = '<table><tr><th></th><th>-</th>';
+                for (let j = 0; j < seq2.length; j++) html += '<th>' + seq2[j] + '</th>';
+                html += '</tr>';
+                for (let i = 0; i <= seq1.length; i++) {
+                    html += '<tr>';
+                    html += i === 0 ? '<th>-</th>' : '<th>' + seq1[i - 1] + '</th>';
+                    for (let j = 0; j <= seq2.length; j++) {
+                        let pCls = pathCoords.some(c => c.i === i && c.j === j) ? 'path-cell' : '';
+                        let hCls = (i === hI && j === hJ) ? 'highlight' : '';
+                        html += `<td class='aln-cell ${hCls} ${pCls}'>`;
+                        if (i === 0 && j === 0) html += `<div class='v-max'>${matrix[i][j]}</div>`;
+                        else if (details[i][j] && details[i][j].isEdge) {
+                            let d = details[i][j]; html += `<div class='mini-val v-edge chosen'>${d.type === 'up' ? '↑' : '←'} ${d.str}</div><div class='v-max'>${matrix[i][j]}</div>`;
+                        } else if (details[i][j]) {
+                            let d = details[i][j];
+                            let diagChosen = d.diag === d.max;
+                            let upChosen = d.up === d.max;
+                            let leftChosen = d.left === d.max;
+                            html += `<div class='mini-val v-diag${diagChosen ? " chosen" : ""}'>↖ ${d.diagStr}=${d.diag}</div>`;
+                            html += `<div class='mini-val v-up${upChosen ? " chosen" : ""}'>↑ ${d.upStr}=${d.up}</div>`;
+                            html += `<div class='mini-val v-left${leftChosen ? " chosen" : ""}'>← ${d.leftStr}=${d.left}</div>`;
+                            html += `<div class='v-max'>${d.max}</div>`;
+                        }
+                        html += '</td>';
+                    }
+                    html += '</tr>';
+                }
+                html += '</table>';
+                document.getElementById('nw-matrix').innerHTML = html;
+                setTimeout(scaleMatrix, 50);
+            }
+
+            function showAlignment() {
+                let i = seq1.length, j = seq2.length;
+                let a1 = [], p = [], a2 = [];
+                pathCoords.push({ i, j });
+                while (i > 0 || j > 0) {
+                    let cur = matrix[i][j], c1 = i > 0 ? seq1[i - 1] : '-', c2 = j > 0 ? seq2[j - 1] : '-';
+                    let isM = c1 === c2, score = isM ? MATCH : MISMATCH;
+                    if (i > 0 && j > 0 && cur === matrix[i - 1][j - 1] + score) { a1.unshift(c1); a2.unshift(c2); p.unshift(isM ? '|' : '&nbsp;'); i--; j--; }
+                    else if (i > 0 && cur === matrix[i - 1][j] + GAP) { a1.unshift(c1); a2.unshift('-'); p.unshift('&nbsp;'); i--; }
+                    else { a1.unshift('-'); a2.unshift(c2); p.unshift('&nbsp;'); j--; }
+                    pathCoords.push({ i, j });
+                }
+
+                const mCount = p.filter(c => c === '|').length;
+                const gCount = a1.filter(c => c === '-').length + a2.filter(c => c === '-').length;
+                const mmCount = p.length - mCount - gCount;
+                const identity = ((mCount / p.length) * 100).toFixed(0);
+                const finalScore = matrix[seq1.length][seq2.length];
+
+                let bioStatus = identity > 70 ? "Alta similitud" : identity > 30 ? "Similitud moderada" : "Divergencia alta";
+                let bioColor = identity > 70 ? "var(--success)" : identity > 30 ? "var(--warning)" : "var(--danger)";
+
+                let html = `<div class="stats-bar">
+            <div class="stat-card score">Score: ${finalScore}</div>
+            <div class="stat-card identity">Identidad: ${mCount}/${p.length} (${identity}%)</div>
+            <div class="stat-card gaps">Gaps: ${gCount}</div>
+            <div class="stat-card mismatch">Mismatches: ${mmCount}</div>
+        </div>`;
+
+                html += `<div class='alignment-container'>`;
+                html += `<div class='seq-row'>` + a2.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                html += `<div class='pipe-row'>` + p.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                html += `<div class='seq-row'>` + a1.map(c => `<span>${c}</span>`).join('') + `</div>`;
+                html += `</div>`;
+
+                html += `<div class="bio-interpretation" style="border-left-color: ${bioColor}">
+            <h4>💡 Interpretación Biológica: ${bioStatus}</h4>
+            <p>Las secuencias muestran un <b>${identity}%</b> de identidad global. ${identity > 30 ? "Existe una relación evolutiva clara entre ambas." : "La divergencia es significativa, sugiriendo una relación lejana o inexistente."}</p>
+            ${gCount > 0 ? `<p style="margin-top:10px;"><b>Gaps detectados (${gCount}):</b> Representan eventos de <b>inserción/deleción</b> necesarios para alinear las secuencias globalmente.</p>` : ""}
+        </div>`;
+
+                document.getElementById('nw-alignment-result').innerHTML = html;
+                document.getElementById('nw-alignment-box').style.display = 'block';
+            }
+
+            function nextStep() {
+                // Detectar cambios en los inputs o puntuaciones
+                const currentS1 = document.getElementById('nw-seq1').value.toUpperCase().trim() || "ACGTGA";
+                const currentS2 = document.getElementById('nw-seq2').value.toUpperCase().trim() || "ACTAGA";
+                const currentM = parseInt(document.getElementById('nw-match').value) || 1;
+                const currentMM = parseInt(document.getElementById('nw-mismatch').value) || -1;
+                const currentG = parseInt(document.getElementById('nw-gap').value) || -1;
+
+                let total = seq1.length * seq2.length;
+
+                if (currentS1 !== seq1 || currentS2 !== seq2 || currentM !== MATCH || currentMM !== MISMATCH || currentG !== GAP || step > total + 1) {
+                    init();
+                    total = seq1.length * seq2.length;
+                }
+
+                if (step > total) {
+                    if (step === total + 1) {
+                        document.getElementById('nw-explanation').innerHTML = "<span class='match-text'>¡Matriz completada!</span> Trazando camino...";
+                        showAlignment();
+                        drawMatrix();
+                        drawCompactMatrices();
+                        step++;
+                    }
+                    return;
+                }
+                let i = Math.floor((step - 1) / seq2.length) + 1, j = ((step - 1) % seq2.length) + 1;
+                let c1 = seq1[i - 1], c2 = seq2[j - 1], isM = (c1 === c2), score = isM ? MATCH : MISMATCH;
+                let diag = matrix[i - 1][j - 1] + score, up = matrix[i - 1][j] + GAP, left = matrix[i][j - 1] + GAP;
+                let maxVal = Math.max(diag, up, left);
+                matrix[i][j] = maxVal;
+                details[i][j] = {
+                    diag, up, left, max: maxVal,
+                    diagStr: `${matrix[i - 1][j - 1]}${score >= 0 ? '+' + score : score}`,
+                    upStr: `${matrix[i - 1][j]}${GAP >= 0 ? '+' + GAP : GAP}`,
+                    leftStr: `${matrix[i][j - 1]}${GAP >= 0 ? '+' + GAP : GAP}`
+                };
+                let sT = isM ? `<span class='match-text'>+${MATCH}</span>` : `<span class='mismatch-text'>${MISMATCH}</span>`;
+                document.getElementById('nw-explanation').innerHTML = `Calculando <b>(${i},${j})</b> | <b>${c1}</b> vs <b>${c2}</b><br>↖: ${matrix[i - 1][j - 1]} ${sT} = <b>${diag}</b> | ↑: <b>${up}</b> | ←: <b>${left}</b><br>Max: <b>${maxVal}</b>`;
+                drawMatrix(i, j); step++;
+            }
+
+            function fastForward() {
+                // Forzamos una comprobación de inicio en la primera llamada
+                nextStep();
+                let t = seq1.length * seq2.length;
+                while (step <= t + 1) nextStep();
+            }
+            return { init, nextStep, fastForward, reset: init };
+        })();
+
+
+
+        /* ============================================================
+           INIT ALL ON LOAD
+           ============================================================ */
+        window.onload = function() {
+            SW.init(); NW.init();
+            document.getElementById('tab-sw').addEventListener('click', function(){ showTab('sw','#00f5ff','Smith-Waterman','Alineamiento Local'); });
+            document.getElementById('tab-nw').addEventListener('click', function(){ showTab('nw','#00e5a0','Needleman-Wunsch','Alineamiento Global'); });
+            document.getElementById('tab-bwt').addEventListener('click', function(){ showTab('bwt','#ff2d78','Burrows-Wheeler Transform','Indexacion y Busqueda'); });
+            document.getElementById('sw-calc').addEventListener('click', function(){ SW.fastForward(); });
+            document.getElementById('sw-step').addEventListener('click', function(){ SW.nextStep(); });
+            document.getElementById('sw-reset').addEventListener('click', function(){ SW.reset(); });
+            document.getElementById('nw-calc').addEventListener('click', function(){ NW.fastForward(); });
+            document.getElementById('nw-step').addEventListener('click', function(){ NW.nextStep(); });
+            document.getElementById('nw-reset').addEventListener('click', function(){ NW.reset(); });
+            document.getElementById('bwt-exec').addEventListener('click', function(){ runBWT(); });
+        };
+
+        /* ============================================================
+           BWT VANILLA JS
+           ============================================================ */
+        var charColorsCache = {}; var cpIdx = 0;
+        var bwtPalette = ['#00f5ff', '#ff2d78', '#9b59ff', '#00e5a0', '#ffcc00', '#ff7b2c', '#ff4d6d', '#a8ff78'];
+        function getCC(c) {
+            if (c === "$") return "#4a5a8a";
+            if (!charColorsCache[c]) { charColorsCache[c] = bwtPalette[cpIdx++ % bwtPalette.length]; }
+            return charColorsCache[c];
+        }
+        function pill(char, idx, ovr, sz) {
+            sz = sz || 36; var col = ovr || getCC(char);
+            return '<div class="char-wrap">' + (idx !== undefined ? '<span class="char-idx">' + idx + '</span>' : '') + '<div class="char-box" style="background:' + col + '15;border-color:' + col + '55;color:' + col + ';width:' + sz + 'px;height:' + sz + 'px;font-size:' + (sz * 0.45) + 'px;">' + char + '</div></div>';
+        }
+        function badge(txt, col) { col = col || '#00f5ff'; return '<span class="badge" style="color:' + col + ';border-color:' + col + '55;background:' + col + '15;">' + txt + '</span>'; }
+        function formula(txt, col) { col = col || '#9b59ff'; return '<div class="formula" style="color:' + col + ';border-left-color:' + col + ';">' + txt + '</div>'; }
+        function stepCard(num, title, color, content, delay) {
+            delay = delay || 0;
+            return '<div class="step-card" style="border-color:' + color + '44;animation-delay:' + delay + 's;"><div style="position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,' + color + ',transparent);"></div><div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;"><div class="step-num-box" style="color:' + color + ';border-color:' + color + '44;background:' + color + '11;">' + num + '</div><div class="step-title" style="text-shadow:0 0 15px ' + color + '88;">' + title + '</div><div style="flex:1;height:1px;background:linear-gradient(90deg,' + color + '44,transparent);"></div></div><div style="padding-left:64px;">' + content + '</div></div>';
+        }
+
+        /* ── Shared: render all 11 BWT steps given precomputed data ── */
+        function bwtRenderSteps(T_in, PAT, rots, sorted, sa, bwt, F, C, occ, freq, chars, lo, hi, found, positions, steps) {
+            function getOcc(c,i){return i<0?0:(occ[c]?occ[c][i]||0:0);}
+            var T = T_in + '$';
+            var n = T.length;
+
+            var html='';
+            var stepColors=['#00f5ff','#ff2d78','#9b59ff','#00e5a0','#ffcc00','#ff7b2c','#ff4d6d','#00f5ff','#ff2d78','#9b59ff','#00e5a0'];
+
+            // â”€â”€ PASO 01: Indexar el Texto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p1 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">A&ntilde;adimos el s&iacute;mbolo terminal '+badge('$','#4a5a8a')+' al final. Es el car&aacute;cter m&aacute;s peque&ntilde;o del alfabeto.</p>';
+            p1 += '<div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:16px;"><span style="color:#4a5a8a;font-size:13px;">T&apos; = </span>'
+                + T.split('').map(function(c,i){return pill(c,i);}).join('') + '</div>';
+            p1 += '<div style="display:flex;gap:16px;flex-wrap:wrap;">'+badge('n = '+n,'#00f5ff')+badge('Texto original: '+T_in,'#ffcc00')+'</div>';
+            html += stepCard('01','Indexar el Texto',stepColors[0],p1,0);
+
+            // â”€â”€ PASO 02: Generar Rotaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p2 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">Generamos '+badge(n,'#ff2d78')+' rotaciones c&iacute;clicas del texto. El <span style="color:#ff4d6d;font-weight:700;">$</span> en rojo. El &uacute;ltimo car&aacute;cter de cada fila &otimes; ser&aacute; la '+badge('BWT','#ff4d6d')+'.</p>';
+            p2 += '<div style="padding-left:24px;">';
+            rots.forEach(function(r,i){
+                var rowHtml = r.rot.split('').map(function(c,ci){
+                    var isL=ci===n-1; var color=c==='$'?'#ff4d6d':getCC(c);
+                    var styling=isL?'border:2.5px solid #ff2d78;box-shadow:0 0 14px #ff2d7899;background:'+color+'30;':'border:1.5px solid '+color+'44;background:'+color+'15;';
+                    return '<div style="position:relative;display:inline-flex;align-items:center;justify-content:center;margin:0 2px;"><div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:'+color+';font-weight:700;font-size:14px;'+styling+'">'+c+'</div>'+(isL?'<span style="color:#ff2d78;font-size:10px;margin-left:4px;">&larr; BWT</span>':'')+'</div>';
+                }).join('');
+                p2 += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;"><span style="color:#4a5a8a;font-size:11px;width:28px;text-align:right;">' + r.off + '</span>'
+                    + '<div style="display:flex;align-items:center;gap:0;background:linear-gradient(90deg,#060d1e,#08112a);border-radius:12px;padding:6px 10px;border:1px solid #1a2a50;">' + rowHtml + '</div></div>';
+            });
+            p2 += '</div>';
+            html += stepCard('02','Generar Todas las Rotaciones',stepColors[1],p2,0.05);
+
+            // â”€â”€ PASO 03: Ordenar Rotaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p3 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">Ordenamos lexicogr&aacute;ficamente. <span style="color:#ff4d6d;">$</span> es el menor. El <span style="color:#00e5a0;">primer car&aacute;cter</span> = columna F. El <span style="color:#ff4d6d;">&otimes; &uacute;ltimo car&aacute;cter</span> = BWT.</p>';
+            p3 += '<div style="display:flex;align-items:flex-start;gap:16px;">';
+            // row numbers
+            p3 += '<div style="padding-top:12px;">';
+            sorted.forEach(function(_,i){ p3 += '<div style="height:47px;display:flex;align-items:center;justify-content:flex-end;font-size:11px;color:#9b59ff;padding-right:8px;min-width:20px;">'+i+'</div>'; });
+            p3 += '</div>';
+            // SA column
+            p3 += '<div style="padding-top:12px;">';
+            sorted.forEach(function(r){ p3 += '<div style="height:47px;display:flex;align-items:center;padding-right:12px;"><span style="background:#00e5a022;border:1px solid #00e5a055;border-radius:6px;padding:2px 10px;color:#00e5a0;font-size:12px;font-weight:700;">'+r.off+'</span></div>'; });
+            p3 += '</div>';
+            // rotations
+            p3 += '<div style="padding-left:0;">';
+            sorted.forEach(function(r,i){
+                var rowHtml = r.rot.split('').map(function(c,ci){
+                    var isL=ci===n-1; var isF=ci===0; var color=c==='$'?'#ff4d6d':getCC(c);
+                    var styling=isL?'border:2.5px solid #ff2d78;box-shadow:0 0 14px #ff2d7899;background:'+color+'30;':isF?'border:2px solid #00e5a0;box-shadow:0 0 8px #00e5a066;background:'+color+'20;':'border:1.5px solid '+color+'44;background:'+color+'15;';
+                    return '<div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 2px;color:'+color+';font-weight:700;font-size:14px;'+styling+'">'+c+'</div>';
+                }).join('');
+                p3 += '<div style="display:flex;align-items:center;gap:0;padding:6px 0;"><div style="display:flex;background:linear-gradient(90deg,#060d1e,#08112a);border-radius:12px;padding:6px 10px;border:1px solid #1a2a50;">'+rowHtml+'</div></div>';
+            });
+            p3 += '</div></div>';
+            p3 += '<div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#00e5a0;box-shadow:0 0 8px #00e5a0;"></div><span style="color:#4a5a8a;font-size:12px;">Primer car&aacute;cter = columna F</span></div><div style="display:flex;align-items:center;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;background:#ff4d6d;box-shadow:0 0 8px #ff4d6d;"></div><span style="color:#4a5a8a;font-size:12px;">&Uacute;ltimo car&aacute;cter &otimes; = BWT (columna L)</span></div></div>';
+            html += stepCard('03','Ordenar Rotaciones Alfab&eacute;ticamente',stepColors[2],p3,0.1);
+
+            // â”€â”€ PASO 04: Extraer Columnas F, L y BWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p4 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;"><span style="color:#00e5a0;">&#x2299; F</span> = primera columna &middot; <span style="color:#ff2d78;">&#x2299; L = BWT</span> = &uacute;ltima columna</p>';
+            p4 += '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px;">';
+            // F column
+            p4 += '<div style="background:#00e5a008;border:1px solid #00e5a033;border-radius:16px;padding:18px 22px;"><div style="color:#00e5a0;font-size:10px;letter-spacing:3px;margin-bottom:14px;font-family:Orbitron,monospace;">&#9672; COLUMNA F (primera)</div><div style="display:flex;flex-direction:column;gap:6px;">';
+            F.split('').forEach(function(c,i){
+                var col=c==='$'?'#ff4d6d':getCC(c);
+                p4 += '<div style="display:flex;align-items:center;gap:10px;"><span style="color:#4a5a8a;font-size:10px;width:14px;">'+i+'</span><div style="position:relative;display:inline-flex;"><div style="position:absolute;inset:-5px;border-radius:50%;border:2px solid #00e5a0;box-shadow:0 0 10px #00e5a066;pointer-events:none;z-index:3;"></div><div style="width:34px;height:34px;border-radius:8px;background:'+col+'28;border:1.5px solid '+col+'88;display:flex;align-items:center;justify-content:center;color:'+col+';font-weight:700;font-size:16px;position:relative;z-index:2;">'+c+'</div></div></div>';
+            });
+            p4 += '</div></div>';
+            // BWT column
+            p4 += '<div style="background:#ff2d7808;border:1px solid #ff2d7833;border-radius:16px;padding:18px 22px;"><div style="color:#ff2d78;font-size:10px;letter-spacing:3px;margin-bottom:14px;font-family:Orbitron,monospace;">&#9672; BWT = COLUMNA L (&uacute;ltima)</div><div style="display:flex;flex-direction:column;gap:6px;">';
+            bwt.split('').forEach(function(c,i){
+                var col=c==='$'?'#ff4d6d':getCC(c);
+                p4 += '<div style="display:flex;align-items:center;gap:10px;"><span style="color:#4a5a8a;font-size:10px;width:14px;">'+i+'</span><div style="position:relative;display:inline-flex;"><div style="position:absolute;inset:-5px;border-radius:50%;border:2.5px solid #ff2d78;box-shadow:0 0 12px #ff2d7888;pointer-events:none;z-index:3;"></div><div style="width:34px;height:34px;border-radius:8px;background:'+col+'38;border:1.5px solid '+col+'bb;display:flex;align-items:center;justify-content:center;color:'+col+';font-weight:700;font-size:16px;position:relative;z-index:2;">'+c+'</div></div></div>';
+            });
+            p4 += '</div></div>';
+            // BWT string result
+            p4 += '<div style="display:flex;flex-direction:column;justify-content:center;"><div style="background:#ff2d780a;border:1px solid #ff2d7844;border-radius:14px;padding:18px 22px;"><div style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:12px;font-family:Orbitron,monospace;">BWT RESULTADO</div><div style="display:flex;gap:5px;flex-wrap:wrap;">';
+            bwt.split('').forEach(function(c){
+                var col=c==='$'?'#ff4d6d':getCC(c);
+                p4 += '<div style="width:38px;height:38px;border-radius:9px;background:'+col+'30;border:1.5px solid '+col+'99;display:flex;align-items:center;justify-content:center;color:'+col+';font-weight:700;font-size:17px;">'+c+'</div>';
+            });
+            p4 += '</div><div style="margin-top:14px;display:flex;align-items:center;gap:8px;"><span style="color:#4a5a8a;font-size:11px;">BWT =</span><span style="color:#ff2d78;font-family:Orbitron,monospace;font-weight:700;font-size:20px;letter-spacing:3px;">'+bwt+'</span></div></div></div>';
+            p4 += '</div>';
+            html += stepCard('04','Extraer Columnas F, L y BWT',stepColors[3],p4,0.15);
+
+            // â”€â”€ PASO 05: Suffix Array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p5 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">Columna de offsets en el orden de la tabla ordenada.</p>';
+            p5 += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">';
+            sa.forEach(function(v,i){ p5 += '<div style="text-align:center;"><div style="color:#4a5a8a;font-size:10px;margin-bottom:6px;">SA['+i+']</div><div style="background:linear-gradient(135deg,#ffcc0022,#ffcc0008);border:1.5px solid #ffcc0066;border-radius:12px;padding:10px 18px;color:#ffcc00;font-family:Orbitron,monospace;font-weight:700;font-size:20px;">'+v+'</div></div>'; });
+            p5 += '</div>'+formula('SA = [ '+sa.join(', ')+' ]','#ffcc00');
+            html += stepCard('05','Suffix Array (SA)',stepColors[4],p5,0.2);
+
+            // â”€â”€ PASO 06: Tabla C â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p6 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;"><span style="color:#ff7b2c;">C[c]</span> = n&uacute;mero de caracteres en T&#x27; estrictamente menores que c</p>';
+            p6 += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;">';
+            Object.keys(C).forEach(function(c){ var col=getCC(c); p6 += '<div style="background:linear-gradient(135deg,'+col+'15,'+col+'05);border:1px solid '+col+'44;border-radius:16px;padding:20px 16px;text-align:center;"><div style="color:'+col+';font-size:24px;font-weight:700;margin-bottom:4px;">\''+c+'\'</div><div style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">C['+c+']</div><div style="font-family:Orbitron,monospace;font-weight:900;font-size:36px;color:'+col+';">'+C[c]+'</div></div>'; });
+            p6 += '</div>';
+            html += stepCard('06','Tabla C (C-Array)',stepColors[5],p6,0.25);
+
+            // â”€â”€ PASO 07: Tabla Occ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p7 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:16px;line-height:1.7;"><span style="color:#ff4d6d;">Occ(c, i)</span> = # de veces que c aparece en L[0..i] (inclusivo)</p>';
+            p7 += '<div style="overflow-x:auto;border-radius:14px;border:1px solid #1a2a50;margin-top:12px;"><table style="border-collapse:collapse;width:100%;font-family:Space Mono,monospace;font-size:12px;">';
+            p7 += '<thead><tr style="background:linear-gradient(90deg,#0a1530,#0d1a38);"><th style="padding:10px 18px;color:#00f5ff;font-weight:700;letter-spacing:1.5px;border-bottom:1px solid #00f5ff33;text-align:center;">i</th><th style="padding:10px 18px;color:#00f5ff;font-weight:700;letter-spacing:1.5px;border-bottom:1px solid #00f5ff33;text-align:center;">L[i]</th>';
+            chars.forEach(function(c){ p7 += '<th style="padding:10px 18px;color:#00f5ff;font-weight:700;letter-spacing:1.5px;border-bottom:1px solid #00f5ff33;text-align:center;">Occ['+c+']</th>'; });
+            p7 += '</tr></thead><tbody>';
+            bwt.split('').forEach(function(ch,i){
+                var rowBg = i%2===0?'#070d1c':'#09112a';
+                p7 += '<tr style="background:'+rowBg+';">';
+                p7 += '<td style="padding:9px 18px;text-align:center;color:#e8eeff;border-bottom:1px solid #1a2a5055;">'+i+'</td>';
+                var chColor = ch==='$'?'#4a5a8a':getCC(ch);
+                p7 += '<td style="padding:9px 18px;text-align:center;color:'+chColor+';font-weight:700;background:'+chColor+'12;border-bottom:1px solid #1a2a5055;">'+ch+'</td>';
+                chars.forEach(function(c){ var val=occ[c][i]; var isMatch=ch===c; var color=isMatch?getCC(c):'#e8eeff'; p7 += '<td style="padding:9px 18px;text-align:center;color:'+color+';font-weight:'+(isMatch?'700':'400')+';background:'+(isMatch?getCC(c)+'12':'transparent')+';border-bottom:1px solid #1a2a5055;">'+val+'</td>'; });
+                p7 += '</tr>';
+            });
+            p7 += '</tbody></table></div>'+formula('Regla borde: Occ(c, -1) = 0','#4a5a8a');
+            html += stepCard('07','Tabla Occ &mdash; Rank Table',stepColors[6],p7,0.3);
+
+            // â”€â”€ PASO 08: Inicializar Rango â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p8 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">Procesamos el patr&oacute;n de <span style="color:#00f5ff;">derecha &rarr; izquierda</span>. Comenzamos por el &uacute;ltimo car&aacute;cter.</p>';
+            p8 += '<div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:24px;flex-wrap:wrap;"><span style="color:#4a5a8a;font-size:13px;">P = </span>';
+            PAT.split('').forEach(function(c,i){
+                var isLast=i===PAT.length-1; var color=isLast?'#00f5ff':getCC(c);
+                p8 += '<div style="position:relative;text-align:center;"><div style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;"><div style="width:42px;height:42px;border-radius:10px;background:'+color+'25;border:1.5px solid '+color+'77;display:flex;align-items:center;justify-content:center;color:'+color+';font-weight:700;font-size:19px;">'+c+'</div></div>';
+                if(isLast) p8 += '<div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;color:#00f5ff;font-size:9px;white-space:nowrap;">&larr; START</div>';
+                p8 += '</div>';
+            });
+            p8 += '</div>';
+            p8 += formula('lo = C['+steps[0].char+'] = '+steps[0].lo,'#00f5ff');
+            p8 += formula('hi = C['+steps[0].char+'] + freq('+steps[0].char+') &minus; 1 = '+steps[0].hi,'#ff2d78');
+            p8 += '<div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">';
+            p8 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;min-width:100px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">lo INICIAL</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:38px;color:#00f5ff;">'+steps[0].lo+'</span></div>';
+            p8 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;min-width:100px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">hi INICIAL</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:38px;color:#ff2d78;">'+steps[0].hi+'</span></div>';
+            p8 += '<div style="background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;text-align:center;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;display:block;margin-bottom:6px;">RANGO INICIAL</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:22px;color:#ffcc00;">['+steps[0].lo+', '+steps[0].hi+']</span></div>';
+            p8 += '</div>';
+            html += stepCard('08','Inicializar Rango con &Uacute;ltimo Car&aacute;cter',stepColors[7],p8,0.35);
+
+            // â”€â”€ PASO 09: Backward Search iteraciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var p9 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:16px;line-height:1.7;">Iteramos el patr&oacute;n de <span style="color:#ff2d78;">derecha a izquierda</span>.</p>';
+            p9 += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;">';
+            p9 += formula('nuevo_lo = C[c] + Occ(c, lo&minus;1)','#00f5ff');
+            p9 += formula('nuevo_hi = C[c] + Occ(c, hi) &minus; 1','#ff2d78');
+            p9 += '</div>';
+            if(steps.slice(1).length===0) {
+                p9 += '<div style="color:#4a5a8a;font-size:13px;text-align:center;padding:20px;">El patr&oacute;n tiene un solo car&aacute;cter, no hay iteraciones.</div>';
+            }
+            steps.slice(1).forEach(function(s,idx){
+                var sc = s.char; var cc = getCC(sc);
+                p9 += '<div style="background:linear-gradient(135deg,#07101e,#0a1428);border:1px solid #9b59ff33;border-radius:16px;padding:24px 28px;margin-bottom:16px;">';
+                p9 += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">'+badge('Iteraci&oacute;n '+(idx+1),'#ffcc00')+' '+badge('c = \''+sc+'\'',cc)+'<div style="flex:1;height:1px;background:linear-gradient(90deg,#9b59ff44,transparent);"></div></div>';
+                p9 += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+                p9 += formula('Occ('+sc+', lo&minus;1) = Occ('+sc+', '+(s.lo-1)+') = '+s.oLo,'#00f5ff');
+                p9 += formula('Occ('+sc+', hi) = Occ('+sc+', '+s.hi+') = '+s.oHi,'#ff2d78');
+                p9 += '</div>';
+                p9 += formula('nuevo_lo = '+s.Cc+' + '+s.oLo+' = '+s.newLo,'#00f5ff');
+                p9 += formula('nuevo_hi = '+s.Cc+' + '+s.oHi+' &minus; 1 = '+s.newHi,'#ff2d78');
+                p9 += '<div style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;">';
+                p9 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;min-width:90px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">NUEVO lo</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:32px;color:#00f5ff;">'+s.newLo+'</span></div>';
+                p9 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;min-width:90px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">NUEVO hi</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:32px;color:#ff2d78;">'+s.newHi+'</span></div>';
+                p9 += '<div style="background:#ffcc000a;border:1px solid #ffcc0033;border-radius:16px;padding:18px 28px;text-align:center;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;display:block;margin-bottom:6px;">NUEVO RANGO</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:22px;color:#ffcc00;">['+s.newLo+', '+s.newHi+']</span></div>';
+                p9 += '</div></div>';
+            });
+            html += stepCard('09','Backward Search &mdash; Iteraciones',stepColors[8],p9,0.4);
+
+            // â”€â”€ PASO 10: Verificar si el Patron Existe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            var foundColor = found?'#00e5a0':'#ff4d6d';
+            var p10 = '<div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">';
+            p10 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">lo FINAL</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:38px;color:#00f5ff;">'+lo+'</span></div>';
+            p10 += '<div style="display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,#08112a,#0c1830);border:1px solid #1a2a50;border-radius:16px;padding:18px 28px;"><span style="color:#4a5a8a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">hi FINAL</span><span style="font-family:Orbitron,monospace;font-weight:900;font-size:38px;color:#ff2d78;">'+hi+'</span></div>';
+            p10 += '</div>';
+            p10 += '<div style="background:'+foundColor+'0f;border:2px solid '+foundColor+';border-radius:20px;padding:28px 32px;display:flex;align-items:center;gap:24px;box-shadow:0 8px 40px '+foundColor+'22;flex-wrap:wrap;">';
+            p10 += '<div style="font-size:56px;line-height:1;">'+(found?'✅':'❌')+'</div>';
+            p10 += '<div><div style="font-family:Orbitron,monospace;font-weight:900;font-size:22px;color:'+foundColor+';margin-bottom:8px;">"'+PAT+'" '+(found?'ENCONTRADO':'NO ENCONTRADO')+'</div>';
+            if(found){ p10 += '<div style="display:flex;gap:12px;flex-wrap:wrap;">'+badge('Ocurrencias: '+(hi-lo+1),'#00e5a0')+badge('Rango: ['+lo+', '+hi+']','#00f5ff')+'</div>'; }
+            p10 += '</div></div>';
+            html += stepCard('10','Verificar si el Patr&oacute;n Existe',stepColors[9],p10,0.45);
+
+            // â”€â”€ PASO 11: Recuperar Posiciones (solo si found) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            if(found) {
+                var p11 = '<p style="color:#4a5a8a;font-size:13px;margin-bottom:20px;line-height:1.7;">SA['+lo+'..'+hi+'] nos da las posiciones exactas en el texto original.</p>';
+                // SA cells highlighted
+                p11 += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">';
+                sa.forEach(function(v,i){
+                    var selected=i>=lo&&i<=hi;
+                    p11 += '<div style="text-align:center;"><div style="color:#4a5a8a;font-size:10px;margin-bottom:6px;">SA['+i+']</div>';
+                    p11 += '<div style="background:'+(selected?'#00e5a025':'#ffcc0008')+';border:2px solid '+(selected?'#00e5a0':'#ffcc0044')+';border-radius:12px;padding:10px 18px;color:'+(selected?'#00e5a0':'#4a5a8a')+';font-family:Orbitron,monospace;font-weight:700;font-size:20px;box-shadow:'+(selected?'0 0 20px #00e5a044':'none')+';transform:'+(selected?'scale(1.1)':'scale(1)')+';transition:all 0.3s;">'+v+'</div></div>';
+                });
+                p11 += '</div>';
+                // positions badges
+                p11 += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;"><span style="color:#4a5a8a;font-size:12px;">Posiciones:</span>';
+                positions.forEach(function(p){ p11 += '<span style="background:#00e5a022;border:1.5px solid #00e5a077;border-radius:10px;padding:6px 18px;color:#00e5a0;font-family:Orbitron,monospace;font-weight:700;font-size:18px;box-shadow:0 0 14px #00e5a044;">'+p+'</span>'; });
+                p11 += '</div>';
+                // visual verification in text
+                p11 += '<div style="background:linear-gradient(135deg,#060e1c,#091220);border:1px solid #1a2a50;border-radius:16px;padding:24px 28px;">';
+                p11 += '<div style="color:#4a5a8a;font-size:10px;letter-spacing:3px;margin-bottom:20px;font-family:Orbitron,monospace;">VERIFICACI&Oacute;N EN EL TEXTO ORIGINAL</div>';
+                positions.forEach(function(pos){
+                    p11 += '<div style="margin-bottom:20px;padding:16px 20px;background:#00e5a006;border:1px solid #00e5a022;border-radius:12px;">';
+                    p11 += '<div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">'+badge('pos '+pos,'#00e5a0')+'<span style="color:#4a5a8a;margin:0 4px;">&rarr;</span>';
+                    T.split('').forEach(function(c,ci){
+                        var inP=ci>=pos&&ci<pos+PAT.length;
+                        var color=inP?'#00e5a0':'#4a5a8a'; var sz=inP?42:34;
+                        p11 += '<div style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;"><span style="font-size:10px;color:#4a5a8a;">'+ci+'</span><div style="width:'+sz+'px;height:'+sz+'px;background:'+color+'25;border:1.5px solid '+color+'77;border-radius:10px;display:flex;align-items:center;justify-content:center;color:'+color+';font-weight:700;font-size:'+(sz*0.45)+'px;">'+c+'</div></div>';
+                    });
+                    p11 += '<span style="color:#00e5a0;font-size:24px;margin-left:8px;">&#10003;</span></div></div>';
+                });
+                p11 += '</div>';
+                // Final summary card
+                p11 += '<div style="margin-top:32px;background:linear-gradient(135deg,#08112a 0%,#0c1835 50%,#08112a 100%);border:1px solid #00f5ff44;border-radius:24px;padding:36px 40px;position:relative;overflow:hidden;box-shadow:0 0 60px #00f5ff18,0 8px 40px #00000055;">';
+                p11 += '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff2d78,#00f5ff,#9b59ff);"></div>';
+                p11 += '<div style="font-family:Orbitron,monospace;font-weight:900;font-size:13px;letter-spacing:3px;color:#00f5ff;margin-bottom:28px;display:flex;align-items:center;gap:12px;"><span style="width:8px;height:8px;border-radius:50%;background:#00f5ff;box-shadow:0 0 10px #00f5ff;display:inline-block;"></span>RESULTADO FINAL</div>';
+                p11 += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">';
+                var summaryItems=[
+                    {label:'BWT(L)',value:bwt,color:'#ff2d78'},
+                    {label:'Patr&oacute;n P',value:'"'+PAT+'"',color:'#9b59ff'},
+                    {label:'Rango Final',value:'['+lo+', '+hi+']',color:'#00f5ff'},
+                    {label:'Ocurrencias',value:String(hi-lo+1),color:'#00e5a0'},
+                    {label:'Posiciones',value:'['+positions.join(', ')+']',color:'#ffcc00'}
+                ];
+                summaryItems.forEach(function(item){
+                    p11 += '<div style="background:'+item.color+'0c;border:1px solid '+item.color+'33;border-radius:16px;padding:18px 20px;">';
+                    p11 += '<div style="color:#4a5a8a;font-size:9px;letter-spacing:2px;margin-bottom:8px;font-family:Orbitron,monospace;">'+item.label+'</div>';
+                    p11 += '<div style="color:'+item.color+';font-weight:700;font-size:'+(item.value.length>8?'13px':'18px')+';">'+item.value+'</div></div>';
+                });
+                p11 += '</div></div>';
+                html += stepCard('11','Recuperar Posiciones con SA',stepColors[10],p11,0.5);
+            }
+
+            return html;
+        }
+
+        /* ── Simple mode: build index + render ── */
+        function runBWT() {
+            var T_in = document.getElementById('bwt-text').value.trim().toUpperCase();
+            var P_in = document.getElementById('bwt-pattern').value.trim().toUpperCase();
+            if(!T_in||!P_in) return;
+            charColorsCache={}; cpIdx=0;
+            var box=document.getElementById('bwt-results'); box.style.display='block'; box.innerHTML='';
+            var T=T_in+'$', PAT=P_in, n=T.length;
+            var rots=[]; for(var i=0;i<n;i++) rots.push({rot:T.slice(i)+T.slice(0,i),off:i});
+            var sorted=rots.slice().sort(function(a,b){return a.rot<b.rot?-1:1;});
+            var sa=sorted.map(function(r){return r.off;});
+            var bwt=sorted.map(function(r){return r.rot[n-1];}).join('');
+            var F=sorted.map(function(r){return r.rot[0];}).join('');
+            var chars=[]; bwt.split('').forEach(function(c){if(chars.indexOf(c)<0)chars.push(c);});
+            chars.sort(function(a,b){return a==='$'?-1:b==='$'?1:a<b?-1:1;});
+            var freq={}; for(var fi=0;fi<bwt.length;fi++) freq[bwt[fi]]=(freq[bwt[fi]]||0)+1;
+            var C={}; var cnt=0; chars.forEach(function(c){C[c]=cnt;cnt+=freq[c]||0;});
+            var occ={}; chars.forEach(function(c){occ[c]=[];});
+            for(var ii=0;ii<n;ii++) chars.forEach(function(c){occ[c].push((ii===0?0:occ[c][ii-1])+(bwt[ii]===c?1:0));});
+            function getOcc(c,i){return i<0?0:(occ[c]?occ[c][i]||0:0);}
+            var lastC=PAT[PAT.length-1];
+            var lo=C[lastC]!==undefined?C[lastC]:0;
+            var hi=(C[lastC]!==undefined?C[lastC]:0)+(freq[lastC]||0)-1;
+            if(!freq[lastC]) hi=-1;
+            var steps=[{char:lastC,lo:lo,hi:hi,init:true}];
+            for(var si=PAT.length-2;si>=0;si--){
+                var sc=PAT[si]; if(lo>hi) break;
+                var oLo=getOcc(sc,lo-1), oHi=getOcc(sc,hi);
+                var nLo=(C[sc]!==undefined?C[sc]:0)+oLo, nHi=(C[sc]!==undefined?C[sc]:0)+oHi-1;
+                steps.push({char:sc,lo:lo,hi:hi,newLo:nLo,newHi:nHi,oLo:oLo,oHi:oHi,Cc:C[sc]||0});
+                lo=nLo; hi=nHi;
+            }
+            var found=lo<=hi&&(freq[lastC]||0)>0;
+            var positions=found?sa.slice(lo,hi+1).sort(function(a,b){return a-b;}):[]; 
+            box.innerHTML = bwtRenderSteps(T_in,PAT,rots,sorted,sa,bwt,F,C,occ,freq,chars,lo,hi,found,positions,steps);
+        }
+
+        /* ============================================================
+           BWT MODE SWITCHER + MULTI-SEQUENCE (BWA-like)
+           ============================================================ */
+        function bwtSetMode(mode) {
+            var isSimple = mode === 'simple';
+            document.getElementById('bwt-panel-simple').style.display = isSimple ? '' : 'none';
+            document.getElementById('bwt-panel-multi').style.display  = isSimple ? 'none' : '';
+            var btnS = document.getElementById('bwt-mode-simple');
+            var btnM = document.getElementById('bwt-mode-multi');
+            if (isSimple) {
+                btnS.style.background = 'linear-gradient(135deg,#00f5ff,#9b59ff)';
+                btnS.style.color = '#050813'; btnS.style.borderColor = 'transparent';
+                btnM.style.background = 'transparent';
+                btnM.style.color = '#4a5a8a'; btnM.style.border = '2px solid #4a5a8a';
+            } else {
+                btnM.style.background = 'linear-gradient(135deg,#9b59ff,#ff2d78)';
+                btnM.style.color = '#050813'; btnM.style.border = 'none';
+                btnS.style.background = 'transparent';
+                btnS.style.color = '#4a5a8a'; btnS.style.border = '2px solid #4a5a8a';
+            }
+        }
+
+        // Multi-sequence state
+        var bwtMultiState = { reads: [], index: -1, autoTimer: null, C: {}, occ: {}, sa: [], bwt: '', genome: '' };
+
+        function bwtBuildIndex(genomeRaw) {
+            var T = genomeRaw.toUpperCase().replace(/\s/g,'') + '$';
+            var n = T.length;
+            var rots = []; for (var i=0;i<n;i++) rots.push({rot:T.slice(i)+T.slice(0,i),off:i});
+            var sorted = rots.slice().sort(function(a,b){return a.rot<b.rot?-1:1;});
+            var sa  = sorted.map(function(r){return r.off;});
+            var bwt = sorted.map(function(r){return r.rot[n-1];}).join('');
+            var chars=[]; bwt.split('').forEach(function(c){if(chars.indexOf(c)<0)chars.push(c);});
+            chars.sort(function(a,b){return a==='$'?-1:b==='$'?1:a<b?-1:1;});
+            var freq={}; for(var fi=0;fi<bwt.length;fi++) freq[bwt[fi]]=(freq[bwt[fi]]||0)+1;
+            var C={}; var cnt=0; chars.forEach(function(c){C[c]=cnt;cnt+=freq[c]||0;});
+            var occ={}; chars.forEach(function(c){occ[c]=[];});
+            for(var ii=0;ii<n;ii++) chars.forEach(function(c){occ[c].push((ii===0?0:occ[c][ii-1])+(bwt[ii]===c?1:0));});
+            return {T:T, sa:sa, bwt:bwt, C:C, occ:occ, freq:freq};
+        }
+
+        function bwtSearchRead(PAT, idx) {
+            var C=bwtMultiState.C, occ=bwtMultiState.occ, freq=bwtMultiState.freq||{};
+            function getOcc(c,i){return i<0?0:(occ[c]?occ[c][i]||0:0);}
+            var lastC=PAT[PAT.length-1];
+            var lo=C[lastC]!==undefined?C[lastC]:0;
+            var hi=(C[lastC]!==undefined?C[lastC]:0)+(freq[lastC]||0)-1;
+            if(!freq[lastC]) hi=-1;
+            var steps=[{char:lastC,lo:lo,hi:hi,init:true}];
+            for(var si=PAT.length-2;si>=0;si--){
+                var sc=PAT[si]; if(lo>hi) break;
+                var oLo=getOcc(sc,lo-1), oHi=getOcc(sc,hi);
+                var nLo=(C[sc]||0)+oLo, nHi=(C[sc]||0)+oHi-1;
+                steps.push({char:sc,lo:lo,hi:hi,newLo:nLo,newHi:nHi,oLo:oLo,oHi:oHi,Cc:(C[sc]||0)});
+                lo=nLo; hi=nHi;
+            }
+            var found=lo<=hi;
+            var sa=bwtMultiState.sa;
+            var positions=found?sa.slice(lo,hi+1).slice().sort(function(a,b){return a-b;}):[]; 
+            return {lo:lo,hi:hi,found:found,positions:positions,steps:steps};
+        }
+
+        function bwtMultiInit() {
+            var genomeRaw = document.getElementById('bwt-genome').value.trim();
+            var readsRaw  = document.getElementById('bwt-reads').value.trim();
+            if (!genomeRaw || !readsRaw) return;
+            var reads = readsRaw.split(',').map(function(r){return r.trim().toUpperCase();}).filter(function(r){return r.length>0;});
+            if (!reads.length) return;
+            var idx = bwtBuildIndex(genomeRaw);
+            bwtMultiState.C      = idx.C;
+            bwtMultiState.occ    = idx.occ;
+            bwtMultiState.freq   = idx.freq;
+            bwtMultiState.sa     = idx.sa;
+            bwtMultiState.bwt    = idx.bwt;
+            bwtMultiState.genome = idx.T;
+            bwtMultiState.reads  = reads;
+            bwtMultiState.index  = -1;
+            document.getElementById('bwt-multi-nav').style.display = '';
+            document.getElementById('bwt-multi-results').innerHTML =
+                '<div style="text-align:center;color:#4a5a8a;font-family:Orbitron,monospace;font-size:12px;padding:32px;">'+
+                '✅ Índice construido — BWT: <span style="color:#ff2d78">'+idx.bwt+'</span><br><br>'+
+                '<span style="color:#4a5a8a">Usa ▶ para buscar el primer read</span></div>';
+            bwtMultiUpdateCounter();
+        }
+
+        function bwtMultiUpdateCounter() {
+            var s = bwtMultiState;
+            document.getElementById('bwt-multi-counter').textContent =
+                (s.index < 0 ? '0' : s.index+1) + ' / ' + s.reads.length;
+        }
+
+        function bwtMultiShowRead(i) {
+            var s = bwtMultiState;
+            if (i < 0 || i >= s.reads.length) return;
+            s.index = i;
+            bwtMultiUpdateCounter();
+            charColorsCache={}; cpIdx=0;
+
+            var PAT = s.reads[i];
+            var T = s.genome; // already has $
+            var T_in = T.slice(0, -1); // without $
+            var n = T.length;
+
+            // Rebuild rotations from genome
+            var rots=[]; for(var ri=0;ri<n;ri++) rots.push({rot:T.slice(ri)+T.slice(0,ri),off:ri});
+            var sorted=rots.slice().sort(function(a,b){return a.rot<b.rot?-1:1;});
+            var sa=s.sa, bwt=s.bwt, C=s.C, occ=s.occ, freq=s.freq;
+            var F=sorted.map(function(r){return r.rot[0];}).join('');
+            var chars=Object.keys(C).sort(function(a,b){return a==='$'?-1:b==='$'?1:a<b?-1:1;});
+
+            // Backward search for this read
+            function getOcc(c,ii){return ii<0?0:(occ[c]?occ[c][ii]||0:0);}
+            var lastC=PAT[PAT.length-1];
+            var lo=C[lastC]!==undefined?C[lastC]:0;
+            var hi=(C[lastC]!==undefined?C[lastC]:0)+(freq[lastC]||0)-1;
+            if(!freq[lastC]) hi=-1;
+            var steps=[{char:lastC,lo:lo,hi:hi,init:true}];
+            for(var si=PAT.length-2;si>=0;si--){
+                var sc=PAT[si]; if(lo>hi) break;
+                var oLo=getOcc(sc,lo-1), oHi=getOcc(sc,hi);
+                var nLo=(C[sc]!==undefined?C[sc]:0)+oLo, nHi=(C[sc]!==undefined?C[sc]:0)+oHi-1;
+                steps.push({char:sc,lo:lo,hi:hi,newLo:nLo,newHi:nHi,oLo:oLo,oHi:oHi,Cc:C[sc]||0});
+                lo=nLo; hi=nHi;
+            }
+            var found=lo<=hi&&(freq[lastC]||0)>0;
+            var positions=found?sa.slice(lo,hi+1).slice().sort(function(a,b){return a-b;}):[]; 
+
+            // Header showing read position in list
+            var fc = found ? '#00e5a0' : '#ff4d6d';
+            var headerHtml = '<div style="background:linear-gradient(135deg,#0a1228,#0f1835);border:1px solid '+fc+'44;border-radius:16px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+            headerHtml += '<div style="background:#9b59ff22;border:1px solid #9b59ff66;border-radius:10px;padding:4px 14px;color:#9b59ff;font-family:Orbitron,monospace;font-weight:700;font-size:12px;">READ '+(i+1)+' / '+s.reads.length+'</div>';
+            headerHtml += '<div style="color:'+fc+';font-family:Orbitron,monospace;font-weight:900;font-size:18px;">"'+PAT+'"</div>';
+            headerHtml += '<div style="color:'+fc+';font-size:20px;">'+(found?'✅':'❌')+'</div>';
+            headerHtml += '<div style="flex:1;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">';
+            s.reads.forEach(function(r,ri){
+                var ac = ri === i;
+                var rc = ac ? fc : '#4a5a8a';
+                headerHtml += '<div onclick="bwtMultiShowRead('+ri+')" style="cursor:pointer;background:'+rc+(ac?'22':'11')+';border:2px solid '+rc+(ac?'':'33')+';border-radius:8px;padding:4px 12px;color:'+rc+';font-family:Orbitron,monospace;font-weight:700;font-size:12px;transition:all .2s;">'+(ri+1)+'. '+r+'</div>';
+            });
+            headerHtml += '</div></div>';
+
+            // Full 11-step solution
+            var stepsHtml = bwtRenderSteps(T_in, PAT, rots, sorted, sa, bwt, F, C, occ, freq, chars, lo, hi, found, positions, steps);
+
+            document.getElementById('bwt-multi-results').innerHTML = headerHtml + stepsHtml;
+        }
+
+        function bwtMultiNav(dir) {
+            var s = bwtMultiState;
+            if (!s.reads.length) return;
+            var i = s.index;
+            if (dir === 'next')  i = Math.min(i+1, s.reads.length-1);
+            if (dir === 'prev')  i = Math.max(i-1, 0);
+            if (dir === 'first') i = 0;
+            if (dir === 'last')  i = s.reads.length-1;
+            if (i < 0) i = 0;
+            bwtMultiShowRead(i);
+        }
+
+        var bwtAutoTimer = null;
+        function bwtMultiAuto() {
+            if (bwtAutoTimer) {
+                clearInterval(bwtAutoTimer);
+                bwtAutoTimer = null;
+                document.getElementById('bwt-multi-auto-btn').textContent = '⚡ AUTO';
+                document.getElementById('bwt-multi-auto-btn').style.background = 'linear-gradient(135deg,#ffcc00,#ff8800)';
+                return;
+            }
+            if (bwtMultiState.index >= bwtMultiState.reads.length-1) bwtMultiState.index = -1;
+            document.getElementById('bwt-multi-auto-btn').textContent = '⏹ STOP';
+            document.getElementById('bwt-multi-auto-btn').style.background = 'linear-gradient(135deg,#ff4d6d,#ff2d78)';
+            bwtAutoTimer = setInterval(function() {
+                var s = bwtMultiState;
+                if (s.index >= s.reads.length-1) {
+                    clearInterval(bwtAutoTimer); bwtAutoTimer = null;
+                    document.getElementById('bwt-multi-auto-btn').textContent = '⚡ AUTO';
+                    document.getElementById('bwt-multi-auto-btn').style.background = 'linear-gradient(135deg,#ffcc00,#ff8800)';
+                    return;
+                }
+                bwtMultiShowRead(s.index+1);
+            }, 1800);
+        }
+
+        // Global: scale matrices to fit screen width using zoom
+        function scaleMatrix() {
+            document.querySelectorAll('.matrix-wrapper').forEach(function(wrapper) {
+                var inner = wrapper.firstElementChild;
+                if (!inner) return;
+                // Reset
+                inner.style.zoom = '';
+                if (window.innerWidth > 900) return;
+                var naturalW = inner.offsetWidth;
+                if (!naturalW) return;
+                var availW = window.innerWidth - 32;
+                if (naturalW > availW) {
+                    var zoom = availW / naturalW;
+                    inner.style.zoom = zoom;
+                }
+            });
+        }
+
+        window.onload = function() {
+            SW.init(); NW.init();
+
+            scaleMatrix();
+            window.addEventListener('resize', scaleMatrix);
+
+            // Smooth header: fade + slide up as you scroll
+            var header = document.querySelector('.main-header');
+            window.addEventListener('scroll', function() {
+                var y = window.scrollY;
+                var headerH = header.scrollHeight;
+                var progress = Math.min(1, y / headerH);
+                var opacity  = 1 - progress;
+                var translateY = -progress * 100;
+                header.style.opacity   = opacity;
+                header.style.transform = 'translateY(' + translateY + '%)';
+                header.style.pointerEvents = progress > 0.95 ? 'none' : '';
+            });
+
+            document.getElementById('tab-sw').addEventListener('click', function(){ showTab('sw','#00f5ff','Smith-Waterman','Alineamiento Local'); });
+            document.getElementById('tab-nw').addEventListener('click', function(){ showTab('nw','#00e5a0','Needleman-Wunsch','Alineamiento Global'); });
+            document.getElementById('tab-bwt').addEventListener('click', function(){ showTab('bwt','#ff2d78','Burrows-Wheeler Transform','Indexacion y Busqueda'); });
+            document.getElementById('sw-calc').addEventListener('click', function(){ SW.fastForward(); });
+            document.getElementById('sw-step').addEventListener('click', function(){ SW.nextStep(); });
+            document.getElementById('sw-reset').addEventListener('click', function(){ SW.reset(); });
+            document.getElementById('nw-calc').addEventListener('click', function(){ NW.fastForward(); });
+            document.getElementById('nw-step').addEventListener('click', function(){ NW.nextStep(); });
+            document.getElementById('nw-reset').addEventListener('click', function(){ NW.reset(); });
+            document.getElementById('bwt-exec').addEventListener('click', function(){ runBWT(); });
+            document.getElementById('bwt-multi-init').addEventListener('click', function(){ bwtMultiInit(); });
+        };
+
+</script>
+    <!-- BWT TAB PANEL -->
+    <div id="panel-bwt" class="tab-panel">
+        <h2>Burrows-Wheeler Transform</h2>
+
+        <!-- MODE SELECTOR -->
+        <div style="display:flex;justify-content:center;gap:12px;margin-bottom:28px;">
+            <button id="bwt-mode-simple" onclick="bwtSetMode('simple')" style="background:linear-gradient(135deg,#00f5ff,#9b59ff);border:none;border-radius:12px;padding:10px 24px;color:#050813;font-family:'Orbitron',monospace;font-weight:900;font-size:12px;cursor:pointer;transition:all .2s;">🔍 Búsqueda Simple</button>
+            <button id="bwt-mode-multi" onclick="bwtSetMode('multi')" style="background:transparent;border:2px solid #4a5a8a;border-radius:12px;padding:10px 24px;color:#4a5a8a;font-family:'Orbitron',monospace;font-weight:900;font-size:12px;cursor:pointer;transition:all .2s;">🧬 Multi-Secuencias (BWA)</button>
+        </div>
+
+        <!-- SIMPLE MODE -->
+        <div id="bwt-panel-simple">
+            <div class="controls" style="justify-content:center;">
+                <label style="color:#00f5ff;">TEXTO T<input type="text" id="bwt-text" value="BANANA" style="border-color:rgba(0,245,255,0.4);"></label>
+                <label style="color:#ff2d78;">PATRON P<input type="text" id="bwt-pattern" value="ANA" style="border-color:rgba(255,45,120,0.4);"></label>
+            </div>
+            <div style="text-align:center;">
+                <button class="ctrl-btn" id="bwt-exec" style="background:linear-gradient(135deg,#00f5ff,#ff2d78) !important;">EJECUTAR BWT</button>
+            </div>
+            <div id="bwt-results" style="margin-top:48px;display:none;"></div>
+        </div>
+
+        <!-- MULTI MODE -->
+        <div id="bwt-panel-multi" style="display:none;">
+            <div class="controls" style="justify-content:center;flex-direction:column;align-items:stretch;max-width:700px;margin:0 auto 24px;gap:16px;">
+                <label style="color:#00f5ff;display:flex;flex-direction:column;gap:8px;">
+                    <span style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;">GENOMA (REFERENCIA)</span>
+                    <input type="text" id="bwt-genome" value="AATCGCGT" style="width:100%;border-color:rgba(0,245,255,0.4);font-size:18px;letter-spacing:4px;">
+                </label>
+                <label style="color:#ff2d78;display:flex;flex-direction:column;gap:8px;">
+                    <span style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;">READS (SEPARADOS POR COMA)</span>
+                    <input type="text" id="bwt-reads" value="CGC, AT, GCG" style="width:100%;border-color:rgba(255,45,120,0.4);font-size:16px;">
+                </label>
+                <div style="background:#0a1228;border:1px solid #1a2a50;border-left:3px solid #9b59ff;border-radius:8px;padding:14px 18px;font-size:12px;color:#4a5a8a;line-height:1.8;">
+                    <span style="color:#9b59ff;font-weight:700;">🚀 Modo Multi-Secuencias (BWA-like):</span><br>
+                    Ingresa múltiples reads separados por coma. Ej: <span style="color:#00f5ff;">CGC, AT, GCG</span><br>
+                    El índice BWT se construye una sola vez y se reutiliza para cada read.
+                </div>
+            </div>
+            <div style="text-align:center;margin-bottom:32px;">
+                <button class="ctrl-btn" id="bwt-multi-init" style="background:linear-gradient(135deg,#00f5ff,#9b59ff) !important;">▶ INICIALIZAR</button>
+            </div>
+            <!-- Navigation controls (hidden until initialized) -->
+            <div id="bwt-multi-nav" style="display:none;text-align:center;margin-bottom:28px;">
+                <div style="display:inline-flex;align-items:center;gap:10px;background:#0a1228;border:1px solid #1a2a50;border-radius:16px;padding:12px 20px;flex-wrap:wrap;justify-content:center;">
+                    <button onclick="bwtMultiNav('first')" style="background:#0f1835;border:1px solid #1a2a50;color:#00f5ff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;">⏮</button>
+                    <button onclick="bwtMultiNav('prev')"  style="background:#0f1835;border:1px solid #1a2a50;color:#00f5ff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;">◀</button>
+                    <button onclick="bwtMultiNav('next')"  style="background:#0f1835;border:1px solid #1a2a50;color:#00f5ff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;">▶</button>
+                    <button onclick="bwtMultiNav('last')"  style="background:#0f1835;border:1px solid #1a2a50;color:#00f5ff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;">⏭</button>
+                    <button id="bwt-multi-auto-btn" onclick="bwtMultiAuto()" style="background:linear-gradient(135deg,#ffcc00,#ff8800);border:none;color:#050813;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'Orbitron',monospace;font-weight:900;font-size:11px;">⚡ AUTO</button>
+                    <span id="bwt-multi-counter" style="color:#ffcc00;font-family:'Orbitron',monospace;font-weight:700;font-size:13px;min-width:60px;">— / —</span>
+                </div>
+            </div>
+            <div id="bwt-multi-results" style="margin-top:8px;"></div>
+        </div>
+
+
+    <footer>
+        <div style="font-size:1.4rem;margin-bottom:8px;">🧬 DNA Alignment Studio &mdash; Bioinform&aacute;tica</div>
+        <div style="font-size:12px;margin-top:6px;opacity:0.5;">Visualizaci&oacute;n interactiva de algoritmos de alineamiento de secuencias</div>
+    </footer>
+
+</body>
+
+</html>
